@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-class OnboardingItem {
+class OnboardingModel {
   final String title;
   final String description;
   final Color bgColor;
-  final String imagePath; // Changed from IconData icon
+  final IconData icon;
 
-  OnboardingItem({
+  OnboardingModel({
     required this.title,
     required this.description,
     required this.bgColor,
-    required this.imagePath,
+    required this.icon,
   });
 }

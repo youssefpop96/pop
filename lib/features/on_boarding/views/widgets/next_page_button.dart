@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../auth/views/screens/login_screen.dart';
+import '../../../auth/views/screens/signup_screen.dart';
 
 class NextPageButton extends StatelessWidget {
   const NextPageButton({super.key});
@@ -11,7 +13,12 @@ class NextPageButton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+              );
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF1A1A1A),
               foregroundColor: Colors.white,
@@ -31,23 +38,31 @@ class NextPageButton extends StatelessWidget {
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: RichText(
-              text: const TextSpan(
-                style: TextStyle(
-                  color: Colors.black54,
-                  fontSize: 13,
-                  height: 1.2,
-                ),
-                children: [
-                  TextSpan(text: "Don't have\naccount? "),
-                  TextSpan(
-                    text: "Create\nnow",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                );
+              },
+              child: RichText(
+                text: const TextSpan(
+                  style: TextStyle(
+                    color: Colors.black54,
+                    fontSize: 13,
+                    height: 1.2,
                   ),
-                ],
+                  children: [
+                    TextSpan(text: "Don't have\naccount? "),
+                    TextSpan(
+                      text: "Create\nnow",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

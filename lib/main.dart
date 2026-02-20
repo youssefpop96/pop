@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'features/on_boarding/views/screens/on_boarding_screen.dart';
+import 'package:pop/features/on_boarding/views/screens/on_boarding_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,12 +11,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter UI',
+      title: 'Pulse Care',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        fontFamily: 'Roboto',
-      ),
+      theme: ThemeData(useMaterial3: true, fontFamily: 'Roboto'),
       home: const OnBoardingScreen(),
     );
   }

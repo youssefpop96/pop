@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../models/on_boarding_step_model.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pop/features/on_boarding/models/on_boarding_step_model.dart';
+import 'package:pop/core/utilities/styles/app_colors.dart';
 
 part 'on_boarding_state.dart';
 
-class OnBoardingCubit {
+class OnBoardingCubit extends Cubit<OnBoardingState> {
+  OnBoardingCubit() : super(OnBoardingInitial());
+
   int currentPage = 0;
 
   final List<OnBoardingStepModel> items = [
@@ -11,28 +15,27 @@ class OnBoardingCubit {
       title: "Risk\nBrave",
       description:
           "Accept major risks to accelerate AI adoption and achieve market leadership.",
-      bgColor: const Color(0xFFFDE3E0),
+      bgColor: AppColors.kOnboardingPink,
       imagePath: "assets/onboarding_1.png",
     ),
     OnBoardingStepModel(
       title: "Wise\nSteps",
       description:
           "Take calculated and strategic steps to balance risks and drive AI-driven progress.",
-      bgColor: const Color(0xFFFBFDE1),
+      bgColor: AppColors.kOnboardingYellow,
       imagePath: "assets/onboarding_2.png",
     ),
     OnBoardingStepModel(
       title: "Stay\nSafe",
       description:
           "Lower implementation risks by adhering to regulations and adopting AI prudently.",
-      bgColor: const Color(0xFFFFE6D3),
+      bgColor: AppColors.kOnboardingPeach,
       imagePath: "assets/onboarding_3.png",
     ),
   ];
 
   void updatePage(int index) {
     currentPage = index;
-    // Note: Since you'll likely use BlocProvider, I'm setting this up for future Cubit usage.
-    // For now, I'll keep the logic simple to match your request.
+    emit(OnBoardingPageChanged(index));
   }
 }
