@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pop/core/utilities/sizes/size_config.dart';
 import 'package:pop/core/utilities/styles/app_colors.dart';
-import '../../models/onboarding_model.dart';
+import '../../models/on_boarding_model.dart';
 import '../widgets/onboarding_page_item.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -21,21 +21,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       description:
           "Accept major risks to accelerate AI adoption and achieve market leadership.",
       bgColor: AppColors.kOnboardingPink,
-      icon: Icons.monetization_on_outlined,
+      imagePath: "assets/onboarding_1.png",
     ),
     OnboardingModel(
       title: "Wise\nSteps",
       description:
           "Take calculated and strategic steps to balance risks and drive AI-driven progress.",
       bgColor: AppColors.kOnboardingYellow,
-      icon: Icons.savings_outlined,
+      imagePath: "assets/onboarding_2.png",
     ),
     OnboardingModel(
       title: "Stay\nSafe",
       description:
           "Lower implementation risks by adhering to regulations and adopting AI prudently.",
       bgColor: AppColors.kOnboardingPeach,
-      icon: Icons.security_outlined,
+      imagePath: "assets/onboarding_3.png",
     ),
   ];
 

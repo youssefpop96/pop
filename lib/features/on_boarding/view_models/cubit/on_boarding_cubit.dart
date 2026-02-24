@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pop/features/on_boarding/models/on_boarding_step_model.dart';
-import 'package:pop/core/utilities/styles/app_colors.dart';
+import '../../models/on_boarding_model.dart';
 
 part 'on_boarding_state.dart';
 
@@ -10,26 +9,26 @@ class OnBoardingCubit extends Cubit<OnBoardingState> {
 
   int currentPage = 0;
 
-  final List<OnBoardingStepModel> items = [
-    OnBoardingStepModel(
+  final List<OnboardingModel> items = [
+    OnboardingModel(
       title: "Risk\nBrave",
       description:
           "Accept major risks to accelerate AI adoption and achieve market leadership.",
-      bgColor: AppColors.kOnboardingPink,
+      bgColor: const Color(0xFFFDE3E0),
       imagePath: "assets/onboarding_1.png",
     ),
-    OnBoardingStepModel(
+    OnboardingModel(
       title: "Wise\nSteps",
       description:
           "Take calculated and strategic steps to balance risks and drive AI-driven progress.",
-      bgColor: AppColors.kOnboardingYellow,
+      bgColor: const Color(0xFFFBFDE1),
       imagePath: "assets/onboarding_2.png",
     ),
-    OnBoardingStepModel(
+    OnboardingModel(
       title: "Stay\nSafe",
       description:
           "Lower implementation risks by adhering to regulations and adopting AI prudently.",
-      bgColor: AppColors.kOnboardingPeach,
+      bgColor: const Color(0xFFFFE6D3),
       imagePath: "assets/onboarding_3.png",
     ),
   ];

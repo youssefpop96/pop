@@ -23,9 +23,9 @@ class CustomSmoothPageIndicator extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 2),
               height: 2,
               decoration: BoxDecoration(
-                color: index == currentPage 
-                    ? Colors.black 
-                    : Colors.black.withOpacity(0.1),
+                color: index == currentPage
+                    ? Colors.black
+                    : Colors.black.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(1),
               ),
             ),

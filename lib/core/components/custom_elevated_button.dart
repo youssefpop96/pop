@@ -6,6 +6,8 @@ class CustomElevatedButton extends StatelessWidget {
   final VoidCallback onPressed;
   final Color? backgroundColor;
   final Color? textColor;
+  final double? borderRadius;
+  final Size? minimumSize;
 
   const CustomElevatedButton({
     super.key,
@@ -13,6 +15,8 @@ class CustomElevatedButton extends StatelessWidget {
     required this.onPressed,
     this.backgroundColor,
     this.textColor,
+    this.borderRadius,
+    this.minimumSize,
   });
 
   @override
@@ -22,8 +26,10 @@ class CustomElevatedButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: backgroundColor ?? AppColors.kPrimaryColor,
         foregroundColor: textColor ?? Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        minimumSize: minimumSize ?? const Size(double.infinity, 56),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(borderRadius ?? 16),
+        ),
         elevation: 0,
       ),
       child: Text(

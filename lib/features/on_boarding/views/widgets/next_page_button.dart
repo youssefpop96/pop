@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../auth/views/screens/login_screen.dart';
-import '../../../auth/views/screens/signup_screen.dart';
+import '../../../auth/sign_in/views/screens/sign_in_screen.dart';
+import '../../../auth/sign_up/views/screens/sign_up_screen.dart';
 
 class NextPageButton extends StatelessWidget {
   const NextPageButton({super.key});
@@ -16,7 +16,7 @@ class NextPageButton extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                MaterialPageRoute(builder: (context) => const SignInScreen()),
               );
             },
             style: ElevatedButton.styleFrom(

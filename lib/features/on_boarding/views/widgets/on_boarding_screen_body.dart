@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pop/features/on_boarding/view_models/cubit/on_boarding_cubit.dart';
-import 'custom_on_boarding_step_item.dart';
+import '../../view_models/cubit/on_boarding_cubit.dart';
+import 'onboarding_page_item.dart';
 import 'custom_smooth_page_indicator.dart';
 
 class OnBoardingScreenBody extends StatefulWidget {
@@ -42,7 +42,7 @@ class _OnBoardingScreenBodyState extends State<OnBoardingScreenBody> {
                 },
                 itemCount: items.length,
                 itemBuilder: (context, index) {
-                  return CustomOnBoardingStepItem(item: items[index]);
+                  return OnboardingPageItem(item: items[index]);
                 },
               ),
               CustomSmoothPageIndicator(
