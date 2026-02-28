@@ -55,7 +55,7 @@ class _SignUpBody extends StatelessWidget {
               const SizedBox(height: 30),
               _buildDivider(),
               const SizedBox(height: 30),
-              _buildSocialLogin(),
+              _buildSocialLogin(context),
             ],
           ),
         );
@@ -165,13 +165,15 @@ class _SignUpBody extends StatelessWidget {
     );
   }
 
-  Widget _buildSocialLogin() {
+  Widget _buildSocialLogin(BuildContext context) {
     return Row(
       children: [
         SocialLoginButton(
           label: 'Google',
           iconPath: 'assets/google.jpg',
-          onTap: () {},
+          onTap: () {
+            context.read<SignUpCubit>().signUpWithGoogle();
+          },
         ),
         const SizedBox(width: 16),
         SocialLoginButton(
