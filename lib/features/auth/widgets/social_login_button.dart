@@ -28,10 +28,12 @@ class SocialLoginButton extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset(
-                iconPath, 
+                iconPath,
                 height: 20,
                 errorBuilder: (context, error, stackTrace) => Icon(
-                  label.toLowerCase().contains('google') ? Icons.g_mobiledata_rounded : Icons.facebook,
+                  label.toLowerCase().contains('google')
+                      ? Icons.g_mobiledata_rounded
+                      : Icons.facebook,
                   size: 20,
                   color: Colors.blueAccent,
                 ),
@@ -41,7 +43,8 @@ class SocialLoginButton extends StatelessWidget {
                 label,
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
-                  fontSize: 14,color:Colors.blueAccent
+                  fontSize: 14,
+                  color: Colors.blueAccent,
                 ),
               ),
             ],

@@ -28,10 +28,12 @@ class SocialLoginButton extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset(
-                iconPath, 
+                iconPath,
                 height: 20,
                 errorBuilder: (context, error, stackTrace) => Icon(
-                  label.toLowerCase().contains('google') ? Icons.g_mobiledata : Icons.facebook,
+                  label.toLowerCase().contains('google')
+                      ? Icons.g_mobiledata
+                      : Icons.facebook,
                   size: 20,
                   color: Colors.black54,
                 ),

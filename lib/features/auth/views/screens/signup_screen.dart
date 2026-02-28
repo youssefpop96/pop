@@ -81,7 +81,10 @@ class SignUpScreen extends StatelessWidget {
                       labelText: 'Password',
                       hintText: '••••••••',
                       obscureText: true,
-                      suffixIcon: Icon(Icons.visibility_off_outlined, color: Colors.black26),
+                      suffixIcon: Icon(
+                        Icons.visibility_off_outlined,
+                        color: Colors.black26,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     SizedBox(
@@ -99,7 +102,10 @@ class SignUpScreen extends StatelessWidget {
                         ),
                         child: const Text(
                           'Sign up',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -109,7 +115,10 @@ class SignUpScreen extends StatelessWidget {
                         Expanded(child: Divider()),
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: Text('Or sign up with', style: TextStyle(color: Colors.black26)),
+                          child: Text(
+                            'Or sign up with',
+                            style: TextStyle(color: Colors.black26),
+                          ),
                         ),
                         Expanded(child: Divider()),
                       ],

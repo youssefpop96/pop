@@ -30,10 +30,7 @@ class NextPageButton extends StatelessWidget {
             ),
             child: const Text(
               'Log In',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
           const SizedBox(width: 16),

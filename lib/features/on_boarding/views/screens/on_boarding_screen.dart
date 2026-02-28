@@ -10,9 +10,7 @@ class OnBoardingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => OnBoardingCubit(),
-      child: const Scaffold(
-        body: OnBoardingScreenBody(),
-      ),
+      child: const Scaffold(body: OnBoardingScreenBody()),
     );
   }
 }

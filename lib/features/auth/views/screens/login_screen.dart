@@ -55,7 +55,9 @@ class LoginScreen extends StatelessWidget {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                              MaterialPageRoute(
+                                builder: (context) => const SignUpScreen(),
+                              ),
                             );
                           },
                           child: const Text(
@@ -83,7 +85,10 @@ class LoginScreen extends StatelessWidget {
                       labelText: 'Password',
                       hintText: '••••••••',
                       obscureText: true,
-                      suffixIcon: Icon(Icons.visibility_off_outlined, color: Colors.black26),
+                      suffixIcon: Icon(
+                        Icons.visibility_off_outlined,
+                        color: Colors.black26,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     SizedBox(
@@ -101,7 +106,10 @@ class LoginScreen extends StatelessWidget {
                         ),
                         child: const Text(
                           'Sign in',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -122,7 +130,10 @@ class LoginScreen extends StatelessWidget {
                         Expanded(child: Divider()),
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: Text('Or sign in with', style: TextStyle(color: Colors.black26)),
+                          child: Text(
+                            'Or sign in with',
+                            style: TextStyle(color: Colors.black26),
+                          ),
                         ),
                         Expanded(child: Divider()),
                       ],

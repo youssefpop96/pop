@@ -17,25 +17,19 @@ class OnboardingPageItem extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 100),
-          Text(
-            item.title,
-            style: AppTextStyles.title64Black900,
-          ),
+          Text(item.title, style: AppTextStyles.title64Black900),
           const Spacer(),
           Center(
             child: Image.asset(
               item.imagePath,
               height: 280,
               fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => 
+              errorBuilder: (context, error, stackTrace) =>
                   const Icon(Icons.broken_image_outlined, size: 100),
             ),
           ),
           const Spacer(),
-          Text(
-            item.description,
-            style: AppTextStyles.title18Black500,
-          ),
+          Text(item.description, style: AppTextStyles.title18Black500),
           const SizedBox(height: 40),
           const NextPageButton(),
           const SizedBox(height: 40),
