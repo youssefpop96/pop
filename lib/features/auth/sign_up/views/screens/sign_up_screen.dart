@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../auth/sign_in/views/screens/sign_in_screen.dart';
 import '../../../../../core/components/custom_text_form_field.dart';
 import '../../../../../core/components/custom_elevated_button.dart';
 import '../../../../../core/components/social_login_button.dart';
-import '../../../../../core/utilities/app_text_styles.dart';
-import '../../../../auth/widgets/auth_layout.dart';
-import '../../view_models/cubit/sign_up_cubit.dart';
+import 'package:pop/features/auth/widgets/auth_layout.dart';
+import 'package:pop/features/home/views/screens/home_screen.dart';
+import 'package:pop/features/auth/sign_up/view_models/cubit/sign_up_cubit.dart';
 
 class SignUpScreen extends StatelessWidget {
   const SignUpScreen({super.key});
@@ -31,13 +32,23 @@ class _SignUpBody extends StatelessWidget {
     return BlocConsumer<SignUpCubit, SignUpState>(
       listener: (context, state) {
         if (state is SignUpSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Account Created! Welcome.')),
-          );
-          Navigator.pushReplacement(
+          ScaffoldMessenger.of(
             context,
-            MaterialPageRoute(builder: (context) => const SignInScreen()),
-          );
+          ).showSnackBar(SnackBar(content: Text(state.message)));
+          // If we have a session, AuthWrapper will handle navigation.
+          // If no session (e.g. email confirmation required), we stay on sign-in screen to let them check email.
+          if (Supabase.instance.client.auth.currentSession != null) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+            );
+          } else {
+            // Stay here or go back to sign in
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const SignInScreen()),
+            );
+          }
         } else if (state is SignUpFailure) {
           ScaffoldMessenger.of(
             context,
@@ -121,10 +132,12 @@ class _SignUpBody extends StatelessWidget {
             obscureText: true,
             onChanged: (val) => cubit.password = val,
             validator: (val) {
-              if (val == null || val.isEmpty)
+              if (val == null || val.isEmpty) {
                 return 'Please enter your password';
-              if (val.length < 6)
+              }
+              if (val.length < 6) {
                 return 'Password must be at least 6 characters';
+              }
               return null;
             },
             suffixIcon: IconButton(

@@ -28,7 +28,11 @@ class SignInCubit extends Cubit<SignInState> {
       } on AuthException catch (e) {
         emit(SignInFailure(errMessage: e.message));
       } catch (e) {
-        emit(SignInFailure(errMessage: 'An unexpected error occurred'));
+        emit(
+          SignInFailure(
+            errMessage: 'An unexpected error occurred: ${e.toString()}',
+          ),
+        );
       }
     }
   }
@@ -51,7 +55,9 @@ class SignInCubit extends Cubit<SignInState> {
       final idToken = googleAuth.idToken;
 
       if (accessToken == null || idToken == null) {
-        emit(SignInFailure(errMessage: 'Failed to retrieve tokens from Google.'));
+        emit(
+          SignInFailure(errMessage: 'Failed to retrieve tokens from Google.'),
+        );
         return;
       }
 

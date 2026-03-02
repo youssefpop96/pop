@@ -6,8 +6,9 @@ import '../../../../../core/components/custom_text_form_field.dart';
 import '../../../../../core/components/custom_elevated_button.dart';
 import '../../../../../core/components/social_login_button.dart';
 import '../../../../../core/utilities/app_text_styles.dart';
-import '../../../../auth/widgets/auth_layout.dart';
-import '../../view_models/cubit/sign_in_cubit.dart';
+import 'package:pop/features/auth/widgets/auth_layout.dart';
+import 'package:pop/features/home/views/screens/home_screen.dart';
+import 'package:pop/features/auth/sign_in/view_models/cubit/sign_in_cubit.dart';
 
 class SignInScreen extends StatelessWidget {
   const SignInScreen({super.key});
@@ -32,9 +33,12 @@ class _SignInBody extends StatelessWidget {
     return BlocConsumer<SignInCubit, SignInState>(
       listener: (context, state) {
         if (state is SignInSuccess) {
-          // Navigate to home
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Welcome! Sign in successful.')),
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
           );
         } else if (state is SignInFailure) {
           ScaffoldMessenger.of(

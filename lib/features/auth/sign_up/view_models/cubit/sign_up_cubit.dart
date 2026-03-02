@@ -20,17 +20,30 @@ class SignUpCubit extends Cubit<SignUpState> {
       try {
         final supabase = Supabase.instance.client;
 
-        await supabase.auth.signUp(
+        final response = await supabase.auth.signUp(
           email: email,
           password: password!,
           data: {'full_name': name},
         );
 
-        emit(SignUpSuccess());
+        if (response.session == null) {
+          emit(
+            SignUpSuccess(
+              message:
+                  'Account Created! Please check your email to confirm your account before logging in.',
+            ),
+          );
+        } else {
+          emit(SignUpSuccess(message: 'Account Created! Welcome.'));
+        }
       } on AuthException catch (e) {
         emit(SignUpFailure(errMessage: e.message));
       } catch (e) {
-        emit(SignUpFailure(errMessage: 'An unexpected error occurred'));
+        emit(
+          SignUpFailure(
+            errMessage: 'An unexpected error occurred: ${e.toString()}',
+          ),
+        );
       }
     }
   }
@@ -53,7 +66,9 @@ class SignUpCubit extends Cubit<SignUpState> {
       final idToken = googleAuth.idToken;
 
       if (accessToken == null || idToken == null) {
-        emit(SignUpFailure(errMessage: 'Failed to retrieve tokens from Google.'));
+        emit(
+          SignUpFailure(errMessage: 'Failed to retrieve tokens from Google.'),
+        );
         return;
       }
 
@@ -64,7 +79,7 @@ class SignUpCubit extends Cubit<SignUpState> {
         accessToken: accessToken,
       );
 
-      emit(SignUpSuccess());
+      emit(SignUpSuccess(message: 'Google Sign In successful. Welcome!'));
     } on AuthException catch (e) {
       emit(SignUpFailure(errMessage: e.message));
     } catch (e) {
