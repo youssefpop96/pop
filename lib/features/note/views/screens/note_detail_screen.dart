@@ -1,35 +1,47 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pop/core/utilities/styles/app_colors.dart';
 import 'package:pop/features/note/views/widgets/tag_chip.dart';
+import 'package:pop/core/models/note_model.dart';
+import 'package:pop/features/note/view_models/cubit/note_cubit.dart';
+import 'package:pop/features/note/view_models/cubit/note_state.dart';
+import 'package:pop/features/note/views/screens/add_note_screen.dart';
 
 class NoteDetailScreen extends StatelessWidget {
-  const NoteDetailScreen({super.key});
+  final NoteModel note;
+  const NoteDetailScreen({super.key, required this.note});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: _buildAppBar(context),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildDateHeader(),
-              const SizedBox(height: 20),
-              _buildNoteContent(),
-              const SizedBox(height: 24),
-              _buildPhotosSection(),
-              const SizedBox(height: 24),
-              _buildTagsSection(),
-              const SizedBox(height: 100), // padding for bottom bar
-            ],
+    return BlocListener<NoteCubit, NoteState>(
+      listener: (context, state) {
+        // If the note was updated, we might want to refresh the local view
+        // but since we passed the note by reference/value, we might need a refresh logic.
+        // For now, going back is safer or we use a BlocBuilder for dynamic updates.
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: _buildAppBar(context),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDateHeader(note.createdAt),
+                const SizedBox(height: 20),
+                _buildNoteContent(note.title, note.content),
+                const SizedBox(height: 24),
+                _buildPhotosSection(),
+                const SizedBox(height: 24),
+                _buildTagsSection(note.tags),
+                const SizedBox(height: 100),
+              ],
+            ),
           ),
         ),
+        bottomSheet: _buildBottomMenuBar(),
       ),
-      bottomSheet: _buildBottomMenuBar(),
     );
   }
 
@@ -42,7 +54,7 @@ class NoteDetailScreen extends StatelessWidget {
         onPressed: () => Navigator.pop(context),
       ),
       title: const Text(
-        'My Diary',
+        'Note Detail',
         style: TextStyle(
           color: Colors.black,
           fontSize: 22,
@@ -52,14 +64,52 @@ class NoteDetailScreen extends StatelessWidget {
       centerTitle: true,
       actions: [
         IconButton(
-          icon: const Icon(Icons.share, color: Colors.black),
-          onPressed: () {},
+          icon: const Icon(Icons.edit_outlined, color: Colors.blueAccent),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddNoteScreen(existingNote: note),
+              ),
+            );
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+          onPressed: () => _showDeleteDialog(context),
         ),
       ],
     );
   }
 
-  Widget _buildDateHeader() {
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (diagContext) => AlertDialog(
+        title: const Text('Delete Note'),
+        content: const Text('Are you sure you want to delete this note?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(diagContext),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<NoteCubit>().deleteNote(note.id);
+              Navigator.pop(diagContext);
+              Navigator.pop(context);
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Note deleted')));
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateHeader(DateTime date) {
     return Row(
       children: [
         Container(
@@ -71,9 +121,9 @@ class NoteDetailScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        const Text(
-          'Today, August 25',
-          style: TextStyle(
+        Text(
+          '${date.day}/${date.month}/${date.year}',
+          style: const TextStyle(
             color: Colors.black54,
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -83,10 +133,28 @@ class NoteDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNoteContent() {
-    return const Text(
-      'Today was a great day!\nI completed all my tasks and had a productive meeting with the team. In the evening, I went to the gym and felt great afterwards. Looking forward to tomorrow!',
-      style: TextStyle(fontSize: 18, color: Colors.black87, height: 1.6),
+  Widget _buildNoteContent(String title, String content) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          content,
+          style: const TextStyle(
+            fontSize: 18,
+            color: Colors.black87,
+            height: 1.6,
+          ),
+        ),
+      ],
     );
   }
 
@@ -105,33 +173,23 @@ class NoteDetailScreen extends StatelessWidget {
         const SizedBox(height: 12),
         Row(
           children: [
-            Container(
-              height: 70,
-              width: 70,
-              margin: const EdgeInsets.only(right: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(16),
-                image: const DecorationImage(
-                  image: AssetImage(
-                    'assets/placeholder_img1.jpg',
-                  ), // Ensure an asset is uploaded here later
-                  fit: BoxFit.cover,
-                ),
+            if (note.images.isEmpty)
+              const Text(
+                'No photos added yet',
+                style: TextStyle(color: Colors.black38),
               ),
-            ),
-            Container(
-              height: 70,
-              width: 70,
-              margin: const EdgeInsets.only(right: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(16),
-                image: const DecorationImage(
-                  image: AssetImage(
-                    'assets/placeholder_img2.jpg',
-                  ), // Ensure an asset is uploaded here later
-                  fit: BoxFit.cover,
+            ...note.images.map(
+              (img) => Container(
+                height: 70,
+                width: 70,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(16),
+                  image: DecorationImage(
+                    image: NetworkImage(img),
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
@@ -141,7 +199,6 @@ class NoteDetailScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.kOnboardingPeach,
                 borderRadius: BorderRadius.circular(16),
-                image: null,
               ),
               child: const Icon(Icons.add, color: Colors.orange, size: 30),
             ),
@@ -151,7 +208,8 @@ class NoteDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTagsSection() {
+  Widget _buildTagsSection(List<String> tags) {
+    if (tags.isEmpty) return const SizedBox();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -164,24 +222,20 @@ class NoteDetailScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            TagChip(
-              label: 'Personal',
-              backgroundColor: AppColors.kGradientBlue.first.withOpacity(0.1),
-              textColor: AppColors.kGradientBlue.first,
-            ),
-            TagChip(
-              label: 'Daily',
-              backgroundColor: AppColors.kPrimaryColor.withOpacity(0.1),
-              textColor: AppColors.kPrimaryColor,
-            ),
-            TagChip(
-              label: 'Life',
-              backgroundColor: AppColors.kGradientBlue.first.withOpacity(0.1),
-              textColor: AppColors.kGradientBlue.first,
-            ),
-          ],
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: tags
+              .map(
+                (tag) => TagChip(
+                  label: tag,
+                  backgroundColor: AppColors.kGradientBlue.first.withValues(
+                    alpha: 0.1,
+                  ),
+                  textColor: AppColors.kGradientBlue.first,
+                ),
+              )
+              .toList(),
         ),
       ],
     );
@@ -197,25 +251,10 @@ class NoteDetailScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          IconButton(
-            icon: const Icon(Icons.home_outlined, color: Colors.black54),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.star_border, color: Colors.black54),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(
-              Icons.shopping_bag_outlined,
-              color: Colors.black54,
-            ),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.folder_outlined, color: Colors.black54),
-            onPressed: () {},
-          ),
+          const Icon(Icons.home_outlined, color: Colors.black54),
+          const Icon(Icons.star_border, color: Colors.black54),
+          const Icon(Icons.shopping_bag_outlined, color: Colors.black54),
+          const Icon(Icons.folder_outlined, color: Colors.black54),
         ],
       ),
     );

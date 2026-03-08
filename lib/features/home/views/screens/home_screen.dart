@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:pop/core/utilities/styles/app_colors.dart';
 import 'package:pop/features/home/views/widgets/custom_search_bar.dart';
-import 'package:pop/features/home/views/widgets/folder_card.dart';
-import 'package:pop/features/home/views/widgets/recent_note_item.dart';
+import 'package:pop/features/home/views/widgets/home_folders_section.dart';
+import 'package:pop/features/home/views/widgets/home_recent_notes_section.dart';
+import 'package:pop/features/note/view_models/cubit/note_cubit.dart';
+import 'package:pop/features/note/view_models/cubit/note_state.dart';
 import 'package:pop/features/note/views/screens/add_note_screen.dart';
-import 'package:pop/features/note/views/screens/note_detail_screen.dart';
-import 'package:pop/features/personal/views/screens/personal_screen.dart';
-import 'package:pop/features/work/views/screens/work_screen.dart';
+import 'package:pop/features/splash/views/screens/splash_screen.dart';
+import 'package:pop/features/home/views/screens/add_folder_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -16,30 +19,49 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildAppBar(),
-      body: SingleChildScrollView(
+      appBar: _buildAppBar(context),
+      body: BlocBuilder<NoteCubit, NoteState>(
+        builder: (context, state) {
+          if (state is NoteLoading) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (state is NoteFailure) {
+            return Center(child: Text('Error: ${state.errMessage}'));
+          } else if (state is NoteSuccess) {
+            return _buildHomeBody(context, state);
+          }
+          return const SizedBox();
+        },
+      ),
+      floatingActionButton: _buildFloatingAddButton(context),
+    );
+  }
+
+  Widget _buildHomeBody(BuildContext context, NoteSuccess state) {
+    return RefreshIndicator(
+      onRefresh: () => context.read<NoteCubit>().fetchHomeData(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const CustomSearchBar(),
             const SizedBox(height: 20),
-            _buildCreateFolderButton(),
+            _buildCreateFolderButton(context),
             const SizedBox(height: 24),
-            _buildFoldersGrid(context),
+            HomeFoldersSection(folders: state.folders),
             const SizedBox(height: 32),
             _buildRecentNotesTitle(),
             const SizedBox(height: 16),
-            _buildRecentNotesList(context),
+            HomeRecentNotesSection(notes: state.recentNotes),
             const SizedBox(height: 100), // spacing for FAB
           ],
         ),
       ),
-      floatingActionButton: _buildFloatingAddButton(context),
     );
   }
 
-  AppBar _buildAppBar() {
+  AppBar _buildAppBar(BuildContext context) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
@@ -57,123 +79,65 @@ class HomeScreen extends StatelessWidget {
       ),
       centerTitle: true,
       actions: [
-        Stack(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.notifications_none, color: Colors.black),
-              onPressed: () {},
-            ),
-            Positioned(
-              right: 12,
-              top: 12,
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ],
+        IconButton(
+          icon: const Icon(Icons.logout, color: Colors.black54),
+          onPressed: () async {
+            await Supabase.instance.client.auth.signOut();
+            if (context.mounted) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const SplashScreen()),
+                (route) => false,
+              );
+            }
+          },
         ),
       ],
     );
   }
 
-  Widget _buildCreateFolderButton() {
+  Widget _buildCreateFolderButton(BuildContext context) {
     return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.add, color: AppColors.kGradientBlue.first),
-            const SizedBox(width: 8),
-            const Text(
-              'Create New Folder',
-              style: TextStyle(
-                color: Colors.black87,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+      child: GestureDetector(
+        onTap: () => _showCreateFolderDialog(context),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-            ),
-          ],
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.add, color: AppColors.kGradientBlue.first),
+              const SizedBox(width: 8),
+              const Text(
+                'Create New Folder',
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildFoldersGrid(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            children: [
-              FolderCard(
-                title: 'Personal',
-                notesCount: '12 Notes',
-                gradientColors: AppColors.kGradientBlue,
-                icon: Icons.person_outline,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PersonalScreen(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              const FolderCard(
-                title: 'Study',
-                notesCount: '15 Notes',
-                gradientColors: AppColors.kGradientPurple,
-                icon: Icons.school_outlined,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            children: [
-              FolderCard(
-                title: 'Work',
-                notesCount: '8 Notes',
-                gradientColors: AppColors.kGradientGreen,
-                icon: Icons.work_outline,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const WorkScreen()),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              const FolderCard(
-                title: 'Ideas',
-                notesCount: '6 Notes',
-                gradientColors: AppColors.kGradientOrange,
-                icon: Icons.lightbulb_outline,
-              ),
-            ],
-          ),
-        ),
-      ],
+  void _showCreateFolderDialog(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddFolderScreen()),
     );
   }
 
@@ -206,59 +170,14 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentNotesList(BuildContext context) {
-    return Column(
-      children: [
-        RecentNoteItem(
-          title: 'Shopping List',
-          folderName: 'Personal',
-          time: 'Today',
-          indicatorColor: AppColors.kPrimaryColor, // Pink
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const NoteDetailScreen()),
-            );
-          },
-        ),
-        RecentNoteItem(
-          title: 'Meeting Summary',
-          folderName: 'Work',
-          time: 'Yesterday',
-          indicatorColor: AppColors.kGradientGreen.first, // Green
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const NoteDetailScreen()),
-            );
-          },
-        ),
-        RecentNoteItem(
-          title: 'Lecture 5',
-          folderName: 'Study',
-          time: '2 days ago',
-          indicatorColor: AppColors.kGradientPurple.first, // Purple
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const NoteDetailScreen()),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
   Widget _buildFloatingAddButton(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(
-          0xFF0061FF,
-        ), // Same blue as "Personal" gradient start
+        color: const Color(0xFF0061FF),
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0061FF).withOpacity(0.4),
+            color: const Color(0xFF0061FF).withValues(alpha: 0.4),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),

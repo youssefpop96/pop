@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:pop/core/utilities/sizes/size_config.dart';
-import 'package:pop/features/splash/views/screens/splash_screen.dart';
-import 'package:pop/features/home/views/screens/home_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'core/utilities/supabase_credentials.dart';
+
+import 'package:pop/core/services/database_service.dart';
+import 'package:pop/core/repositories/notes_repository.dart';
+import 'package:pop/core/repositories/auth_repository.dart';
+import 'package:pop/core/utilities/supabase_credentials.dart';
+import 'package:pop/features/auth/views/screens/auth_wrapper.dart';
+import 'package:pop/features/note/view_models/cubit/note_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,43 +25,31 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Pulse Care',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        fontFamily: 'Roboto',
-        scaffoldBackgroundColor: Colors.white,
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider(create: (context) => AuthRepository()),
+        RepositoryProvider(
+          create: (context) => NotesRepository(DatabaseService()),
+        ),
+      ],
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (context) =>
+                NoteCubit(context.read<NotesRepository>())..fetchHomeData(),
+          ),
+        ],
+        child: MaterialApp(
+          title: 'Pulse Care',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            useMaterial3: true,
+            fontFamily: 'Roboto',
+            scaffoldBackgroundColor: Colors.white,
+          ),
+          home: const AuthWrapper(),
+        ),
       ),
-      // Using an Auth State listener is more reliable for navigation
-      home: const AuthWrapper(),
-    );
-  }
-}
-
-class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<AuthState>(
-      stream: Supabase.instance.client.auth.onAuthStateChange,
-      builder: (context, snapshot) {
-        // Initialize SizeConfig whenever context is available at the root
-        SizeConfig.init(context);
-
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SplashScreen();
-        }
-
-        final session = snapshot.data?.session;
-        if (session != null) {
-          return const HomeScreen();
-        } else {
-          // If no session, show SplashScreen which leads to OnBoarding
-          return const SplashScreen();
-        }
-      },
     );
   }
 }

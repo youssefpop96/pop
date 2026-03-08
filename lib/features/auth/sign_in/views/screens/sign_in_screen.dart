@@ -9,6 +9,7 @@ import '../../../../../core/utilities/app_text_styles.dart';
 import 'package:pop/features/auth/widgets/auth_layout.dart';
 import 'package:pop/features/home/views/screens/home_screen.dart';
 import 'package:pop/features/auth/sign_in/view_models/cubit/sign_in_cubit.dart';
+import 'package:pop/core/repositories/auth_repository.dart';
 
 class SignInScreen extends StatelessWidget {
   const SignInScreen({super.key});
@@ -16,7 +17,7 @@ class SignInScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => SignInCubit(),
+      create: (context) => SignInCubit(context.read<AuthRepository>()),
       child: const Scaffold(
         backgroundColor: Color(0xFFFB5BBD),
         body: _SignInBody(),

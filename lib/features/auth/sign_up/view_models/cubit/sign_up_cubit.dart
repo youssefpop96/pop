@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import '../../../../../core/utilities/supabase_credentials.dart';
+import 'package:pop/core/repositories/auth_repository.dart';
 
 part 'sign_up_state.dart';
 
 class SignUpCubit extends Cubit<SignUpState> {
-  SignUpCubit() : super(SignUpInitial());
+  final AuthRepository _authRepository;
+  SignUpCubit(this._authRepository) : super(SignUpInitial());
 
   String? email;
   String? password;
@@ -18,12 +18,10 @@ class SignUpCubit extends Cubit<SignUpState> {
     if (signUpKey.currentState!.validate()) {
       emit(SignUpLoading());
       try {
-        final supabase = Supabase.instance.client;
-
-        final response = await supabase.auth.signUp(
-          email: email,
+        final response = await _authRepository.signUp(
+          email: email!,
           password: password!,
-          data: {'full_name': name},
+          fullName: name,
         );
 
         if (response.session == null) {
@@ -51,34 +49,7 @@ class SignUpCubit extends Cubit<SignUpState> {
   Future<void> signUpWithGoogle() async {
     emit(SignUpLoading());
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        serverClientId: SupabaseCredentials.googleWebClientId,
-      );
-
-      final googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        emit(SignUpFailure(errMessage: 'Google Sign In cancelled'));
-        return;
-      }
-
-      final googleAuth = await googleUser.authentication;
-      final accessToken = googleAuth.accessToken;
-      final idToken = googleAuth.idToken;
-
-      if (accessToken == null || idToken == null) {
-        emit(
-          SignUpFailure(errMessage: 'Failed to retrieve tokens from Google.'),
-        );
-        return;
-      }
-
-      final supabase = Supabase.instance.client;
-      await supabase.auth.signInWithIdToken(
-        provider: OAuthProvider.google,
-        idToken: idToken,
-        accessToken: accessToken,
-      );
-
+      await _authRepository.signInWithGoogle();
       emit(SignUpSuccess(message: 'Google Sign In successful. Welcome!'));
     } on AuthException catch (e) {
       emit(SignUpFailure(errMessage: e.message));

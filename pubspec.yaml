@@ -23,8 +23,5 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/onboarding_1.png
-    - assets/onboarding_2.png
-    - assets/onboarding_3.png
-    - assets/google.jpg
-    - assets/facebook.jpg
+    - assets/
+

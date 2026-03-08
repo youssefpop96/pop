@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../view_models/cubit/on_boarding_cubit.dart';
-import 'onboarding_page_item.dart';
+import 'on_boarding_page_item.dart';
 import 'custom_smooth_page_indicator.dart';
 
 class OnBoardingScreenBody extends StatefulWidget {
