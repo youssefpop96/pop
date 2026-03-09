@@ -36,7 +36,7 @@ class OnBoardingCubit extends Cubit<OnBoardingState> {
       title: "Stay\nInspired",
       description:
           "Turn your reflections into reality. The perfect tool for thinkers, creators, and dreamers.",
-      bgColor: Colors.white,
+      bgColor: const Color(0xFFD3DAFF),
       imagePath: "assets/onboarding_4.png",
     ),
   ];

@@ -53,7 +53,10 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 32),
             _buildRecentNotesTitle(),
             const SizedBox(height: 16),
-            HomeRecentNotesSection(notes: state.recentNotes),
+            HomeRecentNotesSection(
+              notes: state.recentNotes,
+              folders: state.folders,
+            ),
             const SizedBox(height: 100), // spacing for FAB
           ],
         ),

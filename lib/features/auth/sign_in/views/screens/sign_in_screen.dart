@@ -5,7 +5,7 @@ import '../../../../auth/forgot_password/views/screens/forgot_password_screen.da
 import '../../../../../core/components/custom_text_form_field.dart';
 import '../../../../../core/components/custom_elevated_button.dart';
 import '../../../../../core/components/social_login_button.dart';
-import '../../../../../core/utilities/app_text_styles.dart';
+import '../../../../../core/utilities/styles/app_text_styles.dart';
 import 'package:pop/features/auth/widgets/auth_layout.dart';
 import 'package:pop/features/home/views/screens/home_screen.dart';
 import 'package:pop/features/auth/sign_in/view_models/cubit/sign_in_cubit.dart';

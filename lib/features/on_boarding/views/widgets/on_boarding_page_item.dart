@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/on_boarding_model.dart';
-import '../../../../core/utilities/app_text_styles.dart';
+import '../../../../core/utilities/styles/app_text_styles.dart';
 import 'next_page_button.dart';
 
 class OnboardingPageItem extends StatelessWidget {
