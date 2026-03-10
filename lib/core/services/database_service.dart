@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/folder_model.dart';
 import '../models/note_model.dart';
@@ -63,5 +64,18 @@ class DatabaseService {
 
   Future<void> updateNote(String noteId, Map<String, dynamic> updates) async {
     await _supabase.from('notes').update(updates).eq('id', noteId);
+  }
+
+  // --- Storage ---
+
+  Future<String> uploadImage(File file, String fileName) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) throw Exception('User not authenticated');
+
+    final path = '$userId/$fileName';
+    await _supabase.storage.from('note_images').upload(path, file);
+
+    // Get public URL
+    return _supabase.storage.from('note_images').getPublicUrl(path);
   }
 }

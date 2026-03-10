@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/models/folder_model.dart';
 import '../../../../core/models/note_model.dart';
@@ -74,6 +75,7 @@ class NoteCubit extends Cubit<NoteState> {
     required String content,
     required String folderId,
     List<String> tags = const [],
+    List<String> images = const [],
   }) async {
     try {
       await _repository.saveNote(
@@ -84,6 +86,7 @@ class NoteCubit extends Cubit<NoteState> {
           title: title,
           content: content,
           tags: tags,
+          images: images,
           createdAt: DateTime.now(),
         ),
       );
@@ -144,5 +147,10 @@ class NoteCubit extends Cubit<NoteState> {
       }).toList();
       emit(NoteSuccess(folders: _folders, recentNotes: filtered));
     }
+  }
+
+  Future<String> uploadImage(File file) async {
+    final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+    return await _repository.uploadImage(file, fileName);
   }
 }

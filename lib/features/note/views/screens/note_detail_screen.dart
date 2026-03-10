@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pop/core/utilities/styles/app_colors.dart';
 import 'package:pop/features/note/views/widgets/tag_chip.dart';
@@ -13,39 +15,44 @@ class NoteDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<NoteCubit, NoteState>(
-      listener: (context, state) {
-        // If the note was updated, we might want to refresh the local view
-        // but since we passed the note by reference/value, we might need a refresh logic.
-        // For now, going back is safer or we use a BlocBuilder for dynamic updates.
-      },
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: _buildAppBar(context),
-        body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildDateHeader(note.createdAt),
-                const SizedBox(height: 20),
-                _buildNoteContent(note.title, note.content),
-                const SizedBox(height: 24),
-                _buildPhotosSection(),
-                const SizedBox(height: 24),
-                _buildTagsSection(note.tags),
-                const SizedBox(height: 100),
-              ],
+    return BlocBuilder<NoteCubit, NoteState>(
+      builder: (context, state) {
+        NoteModel currentNote = note;
+        if (state is NoteSuccess) {
+          currentNote = state.recentNotes.firstWhere(
+            (n) => n.id == note.id,
+            orElse: () => note,
+          );
+        }
+
+        return Scaffold(
+          backgroundColor: Colors.white,
+          appBar: _buildAppBar(context, currentNote),
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDateHeader(currentNote.createdAt),
+                  const SizedBox(height: 20),
+                  _buildNoteContent(currentNote.title, currentNote.content),
+                  const SizedBox(height: 24),
+                  _buildPhotosSection(context, currentNote),
+                  const SizedBox(height: 24),
+                  _buildTagsSection(currentNote.tags),
+                  const SizedBox(height: 100),
+                ],
+              ),
             ),
           ),
-        ),
-        bottomSheet: _buildBottomMenuBar(),
-      ),
+          bottomSheet: _buildBottomMenuBar(),
+        );
+      },
     );
   }
 
-  AppBar _buildAppBar(BuildContext context) {
+  AppBar _buildAppBar(BuildContext context, NoteModel currentNote) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
@@ -69,20 +76,20 @@ class NoteDetailScreen extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => AddNoteScreen(existingNote: note),
+                builder: (context) => AddNoteScreen(existingNote: currentNote),
               ),
             );
           },
         ),
         IconButton(
           icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-          onPressed: () => _showDeleteDialog(context),
+          onPressed: () => _showDeleteDialog(context, currentNote),
         ),
       ],
     );
   }
 
-  void _showDeleteDialog(BuildContext context) {
+  void _showDeleteDialog(BuildContext context, NoteModel currentNote) {
     showDialog(
       context: context,
       builder: (diagContext) => AlertDialog(
@@ -95,7 +102,7 @@ class NoteDetailScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              context.read<NoteCubit>().deleteNote(note.id);
+              context.read<NoteCubit>().deleteNote(currentNote.id);
               Navigator.pop(diagContext);
               Navigator.pop(context);
               ScaffoldMessenger.of(
@@ -158,7 +165,7 @@ class NoteDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPhotosSection() {
+  Widget _buildPhotosSection(BuildContext context, NoteModel currentNote) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -171,38 +178,63 @@ class NoteDetailScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            if (note.images.isEmpty)
-              const Text(
-                'No photos added yet',
-                style: TextStyle(color: Colors.black38),
-              ),
-            ...note.images.map(
-              (img) => Container(
-                height: 70,
-                width: 70,
-                margin: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(16),
-                  image: DecorationImage(
-                    image: NetworkImage(img),
-                    fit: BoxFit.cover,
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              if (currentNote.images.isEmpty)
+                const Text(
+                  'No photos added yet',
+                  style: TextStyle(color: Colors.black38),
+                ),
+              ...currentNote.images.map(
+                (img) => Container(
+                  height: 70,
+                  width: 70,
+                  margin: const EdgeInsets.only(right: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(16),
+                    image: DecorationImage(
+                      image: NetworkImage(img),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
-            ),
-            Container(
-              height: 70,
-              width: 70,
-              decoration: BoxDecoration(
-                color: AppColors.kOnboardingPeach,
-                borderRadius: BorderRadius.circular(16),
+              GestureDetector(
+                onTap: () async {
+                  final cubit = context.read<NoteCubit>();
+                  final picker = ImagePicker();
+                  final image = await picker.pickImage(
+                    source: ImageSource.gallery,
+                  );
+                  if (image != null) {
+                    final url = await cubit.uploadImage(File(image.path));
+                    final updatedImages = List<String>.from(currentNote.images)
+                      ..add(url);
+                    await cubit.updateNote(
+                      currentNote.copyWith(images: updatedImages),
+                    );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Image added!')),
+                      );
+                    }
+                  }
+                },
+                child: Container(
+                  height: 70,
+                  width: 70,
+                  decoration: BoxDecoration(
+                    color: AppColors.kOnboardingPeach,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(Icons.add, color: Colors.orange, size: 30),
+                ),
               ),
-              child: const Icon(Icons.add, color: Colors.orange, size: 30),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );

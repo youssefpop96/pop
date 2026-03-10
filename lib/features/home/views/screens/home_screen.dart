@@ -49,7 +49,10 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 20),
             _buildCreateFolderButton(context),
             const SizedBox(height: 24),
-            HomeFoldersSection(folders: state.folders),
+            HomeFoldersSection(
+              folders: state.folders,
+              notes: state.recentNotes,
+            ),
             const SizedBox(height: 32),
             _buildRecentNotesTitle(),
             const SizedBox(height: 16),

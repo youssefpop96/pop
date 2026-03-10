@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pop/core/utilities/styles/app_colors.dart';
 import 'package:pop/core/components/custom_text_form_field.dart';
@@ -25,6 +27,10 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
 
   String? selectedFolderId;
   List<String> tags = [];
+  List<String> imageUrls = [];
+  bool isUploading = false;
+
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -34,9 +40,51 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
       contentController.text = widget.existingNote!.content;
       selectedFolderId = widget.existingNote!.folderId;
       tags = List.from(widget.existingNote!.tags);
+      imageUrls = List.from(widget.existingNote!.images);
     } else {
       selectedFolderId = widget.initialFolderId;
     }
+  }
+
+  Future<void> _pickImage() async {
+    final cubit = context.read<NoteCubit>();
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() => isUploading = true);
+      try {
+        final url = await cubit.uploadImage(File(image.path));
+        if (!mounted) return;
+        setState(() {
+          imageUrls.add(url);
+          isUploading = false;
+        });
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => isUploading = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+      }
+    }
+  }
+
+  void _insertText(String prefix, String suffix) {
+    final text = contentController.text;
+    final selection = contentController.selection;
+
+    // Ensure selection is valid
+    final start = selection.start < 0 ? text.length : selection.start;
+    final end = selection.end < 0 ? text.length : selection.end;
+
+    final before = text.substring(0, start);
+    final selectedText = text.substring(start, end);
+    final after = text.substring(end);
+
+    final newText = '$before$prefix$selectedText$suffix$after';
+    contentController.text = newText;
+    contentController.selection = TextSelection.collapsed(
+      offset: start + prefix.length + selectedText.length + suffix.length,
+    );
   }
 
   @override
@@ -79,6 +127,29 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                 _buildFieldTitle('Content'),
                 const SizedBox(height: 8),
                 _buildContentEditor(),
+                const SizedBox(height: 12),
+                if (isUploading)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Uploading image...',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                _buildImageGrid(),
                 const SizedBox(height: 24),
                 _buildFieldTitle('Folder'),
                 const SizedBox(height: 8),
@@ -124,6 +195,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                           content: contentController.text,
                           folderId: selectedFolderId!,
                           tags: tags,
+                          images: imageUrls,
                         ),
                       );
                     } else {
@@ -132,6 +204,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                         content: contentController.text,
                         folderId: selectedFolderId!,
                         tags: tags,
+                        images: imageUrls,
                       );
                     }
 
@@ -205,7 +278,8 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
         children: [
           TextFormField(
             controller: contentController,
-            maxLines: 8,
+            maxLines: null,
+            minLines: 8,
             decoration: const InputDecoration(
               hintText: 'Start typing your note...',
               hintStyle: TextStyle(color: Colors.black38),
@@ -219,18 +293,85 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
               border: Border(top: BorderSide(color: Colors.grey[200]!)),
             ),
             child: Row(
-              children: const [
-                Icon(Icons.format_align_left, color: Colors.black54),
-                SizedBox(width: 16),
-                Icon(Icons.format_bold, color: Colors.black54),
-                SizedBox(width: 16),
-                Icon(Icons.format_italic, color: Colors.black54),
-                SizedBox(width: 16),
-                Icon(Icons.image_outlined, color: Colors.black54),
+              children: [
+                const Icon(Icons.format_align_left, color: Colors.blueAccent),
+                const SizedBox(width: 16),
+                IconButton(
+                  icon: const Icon(Icons.format_bold, color: Colors.black54),
+                  onPressed: () => _insertText('**', '**'),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                const SizedBox(width: 16),
+                IconButton(
+                  icon: const Icon(Icons.format_italic, color: Colors.black54),
+                  onPressed: () => _insertText('*', '*'),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                const SizedBox(width: 16),
+                IconButton(
+                  icon: const Icon(Icons.image_outlined, color: Colors.black54),
+                  onPressed: _pickImage,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildImageGrid() {
+    if (imageUrls.isEmpty) return const SizedBox();
+    return SizedBox(
+      height: 90,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: imageUrls.length,
+        itemBuilder: (context, index) {
+          return Stack(
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                margin: const EdgeInsets.only(right: 12, top: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  image: DecorationImage(
+                    image: NetworkImage(imageUrls[index]),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 4,
+                top: 0,
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      imageUrls.removeAt(index);
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 12,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

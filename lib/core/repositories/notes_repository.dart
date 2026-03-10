@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:pop/core/models/folder_model.dart';
+
 import 'package:pop/core/models/note_model.dart';
 import 'package:pop/core/services/database_service.dart';
 
@@ -36,5 +38,10 @@ class NotesRepository {
   /// Deletes a specific note by its [id].
   Future<void> deleteNote(String id) async {
     await _dbService.deleteNote(id);
+  }
+
+  /// Uploads an image and returns the public URL.
+  Future<String> uploadImage(File file, String fileName) async {
+    return await _dbService.uploadImage(file, fileName);
   }
 }
