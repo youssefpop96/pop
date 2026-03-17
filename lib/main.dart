@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:pop/core/services/database_service.dart';
 import 'package:pop/core/repositories/notes_repository.dart';
 import 'package:pop/core/repositories/auth_repository.dart';
 import 'package:pop/core/utilities/supabase_credentials.dart';
 import 'package:pop/features/auth/views/screens/auth_wrapper.dart';
 import 'package:pop/features/note/view_models/cubit/note_cubit.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +43,12 @@ class MyApp extends StatelessWidget {
         child: MaterialApp(
           title: 'Pulse Care',
           debugShowCheckedModeBanner: false,
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            FlutterQuillLocalizations.delegate,
+          ],
           theme: ThemeData(
             useMaterial3: true,
             fontFamily: 'Roboto',

@@ -8,8 +8,11 @@ import 'package:pop/core/components/custom_elevated_button.dart';
 import 'package:pop/features/note/views/widgets/tag_chip.dart';
 import 'package:pop/features/note/view_models/cubit/note_cubit.dart';
 import 'package:pop/features/note/view_models/cubit/note_state.dart';
+import 'dart:convert';
 import 'package:pop/core/models/folder_model.dart';
 import 'package:pop/core/models/note_model.dart';
+import 'package:pop/core/components/full_screen_image_viewer.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 
 class AddNoteScreen extends StatefulWidget {
   final String? initialFolderId;
@@ -22,8 +25,8 @@ class AddNoteScreen extends StatefulWidget {
 
 class _AddNoteScreenState extends State<AddNoteScreen> {
   final TextEditingController titleController = TextEditingController();
-  final TextEditingController contentController = TextEditingController();
   final TextEditingController tagController = TextEditingController();
+  late QuillController _quillController;
 
   String? selectedFolderId;
   List<String> tags = [];
@@ -35,9 +38,24 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   @override
   void initState() {
     super.initState();
+    _quillController = QuillController.basic();
     if (widget.existingNote != null) {
       titleController.text = widget.existingNote!.title;
-      contentController.text = widget.existingNote!.content;
+      
+      try {
+        final parsed = jsonDecode(widget.existingNote!.content);
+        if (parsed is List) {
+          _quillController = QuillController(
+            document: Document.fromJson(parsed),
+            selection: const TextSelection.collapsed(offset: 0),
+          );
+        } else {
+          _quillController.document.insert(0, widget.existingNote!.content);
+        }
+      } catch (_) {
+        _quillController.document.insert(0, widget.existingNote!.content);
+      }
+      
       selectedFolderId = widget.existingNote!.folderId;
       tags = List.from(widget.existingNote!.tags);
       imageUrls = List.from(widget.existingNote!.images);
@@ -67,31 +85,11 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
       }
     }
   }
-
-  void _insertText(String prefix, String suffix) {
-    final text = contentController.text;
-    final selection = contentController.selection;
-
-    // Ensure selection is valid
-    final start = selection.start < 0 ? text.length : selection.start;
-    final end = selection.end < 0 ? text.length : selection.end;
-
-    final before = text.substring(0, start);
-    final selectedText = text.substring(start, end);
-    final after = text.substring(end);
-
-    final newText = '$before$prefix$selectedText$suffix$after';
-    contentController.text = newText;
-    contentController.selection = TextSelection.collapsed(
-      offset: start + prefix.length + selectedText.length + suffix.length,
-    );
-  }
-
   @override
   void dispose() {
     titleController.dispose();
-    contentController.dispose();
     tagController.dispose();
+    _quillController.dispose();
     super.dispose();
   }
 
@@ -188,11 +186,13 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                       return;
                     }
 
+                    final contentJson = jsonEncode(_quillController.document.toDelta().toJson());
+
                     if (isEditing) {
                       context.read<NoteCubit>().updateNote(
                         widget.existingNote!.copyWith(
                           title: titleController.text,
-                          content: contentController.text,
+                          content: contentJson,
                           folderId: selectedFolderId!,
                           tags: tags,
                           images: imageUrls,
@@ -201,7 +201,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                     } else {
                       context.read<NoteCubit>().addNote(
                         title: titleController.text,
-                        content: contentController.text,
+                        content: contentJson,
                         folderId: selectedFolderId!,
                         tags: tags,
                         images: imageUrls,
@@ -276,47 +276,36 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
       ),
       child: Column(
         children: [
-          TextFormField(
-            controller: contentController,
-            maxLines: null,
-            minLines: 8,
-            decoration: const InputDecoration(
-              hintText: 'Start typing your note...',
-              hintStyle: TextStyle(color: Colors.black38),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.all(16),
+          QuillSimpleToolbar(
+            controller: _quillController,
+            config: QuillSimpleToolbarConfig(
+              showLink: true,
+              showFontFamily: false,
+              showFontSize: false,
+              showSearchButton: false,
+              showSubscript: false,
+              showSuperscript: false,
+              customButtons: [
+                QuillToolbarCustomButtonOptions(
+                  icon: const Icon(Icons.image_outlined, color: Colors.black54),
+                  onPressed: _pickImage,
+                  tooltip: 'Insert Image',
+                ),
+              ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
               border: Border(top: BorderSide(color: Colors.grey[200]!)),
             ),
-            child: Row(
-              children: [
-                const Icon(Icons.format_align_left, color: Colors.blueAccent),
-                const SizedBox(width: 16),
-                IconButton(
-                  icon: const Icon(Icons.format_bold, color: Colors.black54),
-                  onPressed: () => _insertText('**', '**'),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-                const SizedBox(width: 16),
-                IconButton(
-                  icon: const Icon(Icons.format_italic, color: Colors.black54),
-                  onPressed: () => _insertText('*', '*'),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-                const SizedBox(width: 16),
-                IconButton(
-                  icon: const Icon(Icons.image_outlined, color: Colors.black54),
-                  onPressed: _pickImage,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ],
+            height: 300,
+            child: QuillEditor.basic(
+              controller: _quillController,
+              config: const QuillEditorConfig(
+                placeholder: 'Start typing your note...',
+                padding: EdgeInsets.symmetric(vertical: 16),
+              ),
             ),
           ),
         ],
@@ -332,17 +321,35 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
         scrollDirection: Axis.horizontal,
         itemCount: imageUrls.length,
         itemBuilder: (context, index) {
+          final imageUrl = imageUrls[index];
           return Stack(
             children: [
-              Container(
-                width: 80,
-                height: 80,
-                margin: const EdgeInsets.only(right: 12, top: 8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  image: DecorationImage(
-                    image: NetworkImage(imageUrls[index]),
-                    fit: BoxFit.cover,
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => FullScreenImageViewer(
+                            imageUrl: imageUrl,
+                            tag: 'add_note_img_$index',
+                          ),
+                    ),
+                  );
+                },
+                child: Hero(
+                  tag: 'add_note_img_$index',
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    margin: const EdgeInsets.only(right: 12, top: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      image: DecorationImage(
+                        image: NetworkImage(imageUrl),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                 ),
               ),

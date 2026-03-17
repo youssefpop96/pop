@@ -8,20 +8,34 @@ import 'package:pop/core/models/note_model.dart';
 import 'package:pop/features/note/view_models/cubit/note_cubit.dart';
 import 'package:pop/features/note/view_models/cubit/note_state.dart';
 import 'package:pop/features/note/views/screens/add_note_screen.dart';
+import 'package:pop/core/components/full_screen_image_viewer.dart';
+import 'package:flutter_quill/flutter_quill.dart';
+import 'dart:convert';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:flutter_quill_to_pdf/flutter_quill_to_pdf.dart';
 
-class NoteDetailScreen extends StatelessWidget {
+class NoteDetailScreen extends StatefulWidget {
   final NoteModel note;
   const NoteDetailScreen({super.key, required this.note});
+
+  @override
+  State<NoteDetailScreen> createState() => _NoteDetailScreenState();
+}
+
+class _NoteDetailScreenState extends State<NoteDetailScreen> {
+  bool isAddingImage = false;
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<NoteCubit, NoteState>(
       builder: (context, state) {
-        NoteModel currentNote = note;
+        NoteModel currentNote = widget.note;
         if (state is NoteSuccess) {
           currentNote = state.recentNotes.firstWhere(
-            (n) => n.id == note.id,
-            orElse: () => note,
+            (n) => n.id == widget.note.id,
+            orElse: () => widget.note,
           );
         }
 
@@ -71,6 +85,10 @@ class NoteDetailScreen extends StatelessWidget {
       centerTitle: true,
       actions: [
         IconButton(
+          icon: const Icon(Icons.picture_as_pdf_outlined, color: Colors.blueAccent),
+          onPressed: () => _exportToPdf(context, currentNote),
+        ),
+        IconButton(
           icon: const Icon(Icons.edit_outlined, color: Colors.blueAccent),
           onPressed: () {
             Navigator.push(
@@ -92,27 +110,28 @@ class NoteDetailScreen extends StatelessWidget {
   void _showDeleteDialog(BuildContext context, NoteModel currentNote) {
     showDialog(
       context: context,
-      builder: (diagContext) => AlertDialog(
-        title: const Text('Delete Note'),
-        content: const Text('Are you sure you want to delete this note?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(diagContext),
-            child: const Text('Cancel'),
+      builder:
+          (diagContext) => AlertDialog(
+            title: const Text('Delete Note'),
+            content: const Text('Are you sure you want to delete this note?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(diagContext),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  context.read<NoteCubit>().deleteNote(currentNote.id);
+                  Navigator.pop(diagContext);
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('Note deleted')));
+                },
+                child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              context.read<NoteCubit>().deleteNote(currentNote.id);
-              Navigator.pop(diagContext);
-              Navigator.pop(context);
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Note deleted')));
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
   }
 
@@ -141,6 +160,24 @@ class NoteDetailScreen extends StatelessWidget {
   }
 
   Widget _buildNoteContent(String title, String content) {
+    QuillController quillController;
+    try {
+      final parsed = jsonDecode(content);
+      if (parsed is List) {
+        quillController = QuillController(
+          document: Document.fromJson(parsed),
+          selection: const TextSelection.collapsed(offset: 0),
+          readOnly: true,
+        );
+      } else {
+        quillController = QuillController.basic();
+        quillController.document.insert(0, content);
+      }
+    } catch (_) {
+      quillController = QuillController.basic();
+      quillController.document.insert(0, content);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -153,16 +190,62 @@ class NoteDetailScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Text(
-          content,
-          style: const TextStyle(
-            fontSize: 18,
-            color: Colors.black87,
-            height: 1.6,
+        QuillEditor.basic(
+          controller: quillController,
+          config: const QuillEditorConfig(
+            checkBoxReadOnly: true,
           ),
         ),
       ],
     );
+  }
+
+  Future<void> _exportToPdf(BuildContext context, NoteModel note) async {
+    try {
+      List<dynamic>? deltaList;
+      try {
+        final parsed = jsonDecode(note.content);
+        if (parsed is List) deltaList = parsed;
+      } catch (_) {}
+
+      pw.Document doc;
+
+      if (deltaList != null) {
+        final pageFormat = PDFPageFormat.all(
+          width: PdfPageFormat.a4.width,
+          height: PdfPageFormat.a4.height,
+          margin: 32,
+        );
+
+        final pdfConverter = PDFConverter(
+          document: Document.fromJson(deltaList).toDelta(),
+          pageFormat: pageFormat,
+          fallbacks: <pw.Font>[],
+        );
+        doc = await pdfConverter.createDocument() ?? pw.Document();
+      } else {
+        doc = pw.Document();
+        doc.addPage(
+          pw.MultiPage(
+            pageFormat: PdfPageFormat.a4,
+            build: (context) => [
+              pw.Header(level: 0, child: pw.Text(note.title)),
+              pw.Paragraph(text: note.content),
+            ],
+          ),
+        );
+      }
+
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => doc.save(),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to generate PDF: $e')),
+        );
+      }
+    }
   }
 
   Widget _buildPhotosSection(BuildContext context, NoteModel currentNote) {
@@ -182,47 +265,60 @@ class NoteDetailScreen extends StatelessWidget {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              if (currentNote.images.isEmpty)
+              if (currentNote.images.isEmpty && !isAddingImage)
                 const Text(
                   'No photos added yet',
                   style: TextStyle(color: Colors.black38),
                 ),
-              ...currentNote.images.map(
-                (img) => Container(
+              ...currentNote.images.asMap().entries.map((entry) {
+                final int idx = entry.key;
+                final String img = entry.value;
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => FullScreenImageViewer(
+                              imageUrl: img,
+                              tag: 'note_${currentNote.id}_img_$idx',
+                            ),
+                      ),
+                    );
+                  },
+                  child: Hero(
+                    tag: 'note_${currentNote.id}_img_$idx',
+                    child: Container(
+                      height: 70,
+                      width: 70,
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(16),
+                        image: DecorationImage(
+                          image: NetworkImage(img),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+              if (isAddingImage)
+                Container(
                   height: 70,
                   width: 70,
                   margin: const EdgeInsets.only(right: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: Colors.grey[100],
                     borderRadius: BorderRadius.circular(16),
-                    image: DecorationImage(
-                      image: NetworkImage(img),
-                      fit: BoxFit.cover,
-                    ),
+                  ),
+                  child: const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 ),
-              ),
               GestureDetector(
-                onTap: () async {
-                  final cubit = context.read<NoteCubit>();
-                  final picker = ImagePicker();
-                  final image = await picker.pickImage(
-                    source: ImageSource.gallery,
-                  );
-                  if (image != null) {
-                    final url = await cubit.uploadImage(File(image.path));
-                    final updatedImages = List<String>.from(currentNote.images)
-                      ..add(url);
-                    await cubit.updateNote(
-                      currentNote.copyWith(images: updatedImages),
-                    );
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Image added!')),
-                      );
-                    }
-                  }
-                },
+                onTap: isAddingImage ? null : () => _onAddImage(currentNote),
                 child: Container(
                   height: 70,
                   width: 70,
@@ -238,6 +334,36 @@ class NoteDetailScreen extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _onAddImage(NoteModel currentNote) async {
+    final cubit = context.read<NoteCubit>();
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      if (!mounted) return;
+      setState(() => isAddingImage = true);
+      try {
+        final url = await cubit.uploadImage(File(image.path));
+        final updatedImages = List<String>.from(currentNote.images)..add(url);
+        await cubit.updateNote(currentNote.copyWith(images: updatedImages));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Image added!')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to add image: $e')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => isAddingImage = false);
+        }
+      }
+    }
   }
 
   Widget _buildTagsSection(List<String> tags) {
@@ -282,11 +408,11 @@ class NoteDetailScreen extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          const Icon(Icons.home_outlined, color: Colors.black54),
-          const Icon(Icons.star_border, color: Colors.black54),
-          const Icon(Icons.shopping_bag_outlined, color: Colors.black54),
-          const Icon(Icons.folder_outlined, color: Colors.black54),
+        children: const [
+          Icon(Icons.home_outlined, color: Colors.black54),
+          Icon(Icons.star_border, color: Colors.black54),
+          Icon(Icons.shopping_bag_outlined, color: Colors.black54),
+          Icon(Icons.folder_outlined, color: Colors.black54),
         ],
       ),
     );

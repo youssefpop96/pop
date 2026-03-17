@@ -150,7 +150,14 @@ class NoteCubit extends Cubit<NoteState> {
   }
 
   Future<String> uploadImage(File file) async {
-    final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-    return await _repository.uploadImage(file, fileName);
+    try {
+      final extension = file.path.contains('.')
+          ? file.path.split('.').last
+          : 'jpg';
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.$extension';
+      return await _repository.uploadImage(file, fileName);
+    } catch (e) {
+      throw Exception('Cubit Upload failed: $e');
+    }
   }
 }
