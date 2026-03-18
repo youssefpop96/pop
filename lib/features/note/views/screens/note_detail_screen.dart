@@ -85,11 +85,11 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       centerTitle: true,
       actions: [
         IconButton(
-          icon: const Icon(Icons.picture_as_pdf_outlined, color: Colors.blueAccent),
+          icon: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.kPrimaryColor),
           onPressed: () => _exportToPdf(context, currentNote),
         ),
         IconButton(
-          icon: const Icon(Icons.edit_outlined, color: Colors.blueAccent),
+          icon: const Icon(Icons.edit_outlined, color: AppColors.kPrimaryColor),
           onPressed: () {
             Navigator.push(
               context,

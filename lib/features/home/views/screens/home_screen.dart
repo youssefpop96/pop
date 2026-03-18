@@ -113,8 +113,8 @@ class HomeScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
+                color: AppColors.kPrimaryColor.withValues(alpha: 0.1),
+                blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
             ],
@@ -123,7 +123,7 @@ class HomeScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.add, color: AppColors.kGradientBlue.first),
+              const Icon(Icons.add, color: AppColors.kPrimaryColor),
               const SizedBox(width: 8),
               const Text(
                 'Create New Folder',
@@ -179,12 +179,12 @@ class HomeScreen extends StatelessWidget {
   Widget _buildFloatingAddButton(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF0061FF),
+        color: AppColors.kPrimaryColor,
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0061FF).withValues(alpha: 0.4),
-            blurRadius: 15,
+            color: AppColors.kPrimaryColor.withValues(alpha: 0.35),
+            blurRadius: 18,
             offset: const Offset(0, 8),
           ),
         ],

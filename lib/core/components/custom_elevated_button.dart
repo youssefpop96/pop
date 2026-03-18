@@ -21,20 +21,43 @@ class CustomElevatedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor ?? AppColors.kPrimaryColor,
-        foregroundColor: textColor ?? Colors.white,
-        minimumSize: minimumSize ?? const Size(double.infinity, 56),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(borderRadius ?? 16),
-        ),
-        elevation: 0,
+    return Container(
+      decoration: BoxDecoration(
+        gradient: backgroundColor == null
+            ? const LinearGradient(
+                colors: AppColors.kGradientBlue,
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              )
+            : null,
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(borderRadius ?? 16),
+        boxShadow: backgroundColor == null
+            ? [
+                BoxShadow(
+                  color: AppColors.kPrimaryColor.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
       ),
-      child: Text(
-        text,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          foregroundColor: textColor ?? Colors.white,
+          minimumSize: minimumSize ?? const Size(double.infinity, 56),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(borderRadius ?? 16),
+          ),
+          elevation: 0,
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }

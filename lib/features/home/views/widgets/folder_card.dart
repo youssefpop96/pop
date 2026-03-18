@@ -32,8 +32,8 @@ class FolderCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: gradientColors[1].withValues(alpha: 0.4),
-              blurRadius: 15,
+              color: gradientColors[1].withValues(alpha: 0.25),
+              blurRadius: 18,
               offset: const Offset(0, 8),
             ),
           ],

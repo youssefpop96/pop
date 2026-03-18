@@ -24,8 +24,8 @@ class HomeFoldersSection extends StatelessWidget {
       AppColors.kGradientGreen,
       AppColors.kGradientPurple,
       AppColors.kGradientOrange,
-      [const Color(0xFFF44336), const Color(0xFFFF8A80)],
-      [const Color(0xFFCDDC39), const Color(0xFFE6EE9C)],
+      AppColors.kGradientPink,
+      AppColors.kGradientTeal,
     ];
 
     final List<IconData> iconPool = [
