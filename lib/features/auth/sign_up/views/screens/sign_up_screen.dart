@@ -5,6 +5,7 @@ import '../../../../auth/sign_in/views/screens/sign_in_screen.dart';
 import '../../../../../core/components/custom_text_form_field.dart';
 import '../../../../../core/components/custom_elevated_button.dart';
 import '../../../../../core/components/social_login_button.dart';
+import '../../../../../core/utilities/styles/app_colors.dart';
 import 'package:pop/features/auth/widgets/auth_layout.dart';
 import 'package:pop/features/home/views/screens/home_screen.dart';
 import 'package:pop/features/auth/sign_up/view_models/cubit/sign_up_cubit.dart';
@@ -18,7 +19,7 @@ class SignUpScreen extends StatelessWidget {
     return BlocProvider(
       create: (context) => SignUpCubit(context.read<AuthRepository>()),
       child: const Scaffold(
-        backgroundColor: Color(0xFFF143BA),
+        backgroundColor: AppColors.kPrimaryColor,
         body: _SignUpBody(),
       ),
     );

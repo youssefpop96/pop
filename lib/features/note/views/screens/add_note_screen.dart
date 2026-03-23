@@ -8,11 +8,10 @@ import 'package:pop/core/components/custom_elevated_button.dart';
 import 'package:pop/features/note/views/widgets/tag_chip.dart';
 import 'package:pop/features/note/view_models/cubit/note_cubit.dart';
 import 'package:pop/features/note/view_models/cubit/note_state.dart';
-import 'dart:convert';
 import 'package:pop/core/models/folder_model.dart';
 import 'package:pop/core/models/note_model.dart';
 import 'package:pop/core/components/full_screen_image_viewer.dart';
-import 'package:flutter_quill/flutter_quill.dart';
+import 'package:html_editor_enhanced/html_editor.dart';
 
 class AddNoteScreen extends StatefulWidget {
   final String? initialFolderId;
@@ -26,7 +25,7 @@ class AddNoteScreen extends StatefulWidget {
 class _AddNoteScreenState extends State<AddNoteScreen> {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController tagController = TextEditingController();
-  late QuillController _quillController;
+  final HtmlEditorController _controller = HtmlEditorController();
 
   String? selectedFolderId;
   List<String> tags = [];
@@ -38,24 +37,8 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   @override
   void initState() {
     super.initState();
-    _quillController = QuillController.basic();
     if (widget.existingNote != null) {
       titleController.text = widget.existingNote!.title;
-      
-      try {
-        final parsed = jsonDecode(widget.existingNote!.content);
-        if (parsed is List) {
-          _quillController = QuillController(
-            document: Document.fromJson(parsed),
-            selection: const TextSelection.collapsed(offset: 0),
-          );
-        } else {
-          _quillController.document.insert(0, widget.existingNote!.content);
-        }
-      } catch (_) {
-        _quillController.document.insert(0, widget.existingNote!.content);
-      }
-      
       selectedFolderId = widget.existingNote!.folderId;
       tags = List.from(widget.existingNote!.tags);
       imageUrls = List.from(widget.existingNote!.images);
@@ -89,7 +72,6 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   void dispose() {
     titleController.dispose();
     tagController.dispose();
-    _quillController.dispose();
     super.dispose();
   }
 
@@ -172,7 +154,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                 const SizedBox(height: 40),
                 CustomElevatedButton(
                   text: isEditing ? 'Update Note' : 'Save Note',
-                  onPressed: () {
+                  onPressed: () async {
                     if (titleController.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Please enter a title')),
@@ -186,38 +168,43 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                       return;
                     }
 
-                    final contentJson = jsonEncode(_quillController.document.toDelta().toJson());
+                    final contentText = await _controller.getText();
+                    if (!mounted) return;
+
+                    final cubit = context.read<NoteCubit>();
 
                     if (isEditing) {
-                      context.read<NoteCubit>().updateNote(
+                      cubit.updateNote(
                         widget.existingNote!.copyWith(
                           title: titleController.text,
-                          content: contentJson,
+                          content: contentText,
                           folderId: selectedFolderId!,
                           tags: tags,
                           images: imageUrls,
                         ),
                       );
                     } else {
-                      context.read<NoteCubit>().addNote(
+                      cubit.addNote(
                         title: titleController.text,
-                        content: contentJson,
+                        content: contentText,
                         folderId: selectedFolderId!,
                         tags: tags,
                         images: imageUrls,
                       );
                     }
 
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          isEditing
-                              ? 'Note Updated Successfully!'
-                              : 'Note Saved Successfully!',
+                    if (mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            isEditing
+                                ? 'Note Updated Successfully!'
+                                : 'Note Saved Successfully!',
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                    }
                   },
                 ),
                 const SizedBox(height: 40),
@@ -274,41 +261,58 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
           ),
         ],
       ),
-      child: Column(
-        children: [
-          QuillSimpleToolbar(
-            controller: _quillController,
-            config: QuillSimpleToolbarConfig(
-              showLink: true,
-              showFontFamily: false,
-              showFontSize: false,
-              showSearchButton: false,
-              showSubscript: false,
-              showSuperscript: false,
-              customButtons: [
-                QuillToolbarCustomButtonOptions(
-                  icon: const Icon(Icons.image_outlined, color: Colors.black54),
-                  onPressed: _pickImage,
-                  tooltip: 'Insert Image',
-                ),
-              ],
+      child: HtmlEditor(
+        controller: _controller,
+        htmlEditorOptions: HtmlEditorOptions(
+          hint: 'Start typing your note...',
+          initialText: widget.existingNote?.content,
+          shouldEnsureVisible: true,
+        ),
+        htmlToolbarOptions: HtmlToolbarOptions(
+          toolbarPosition: ToolbarPosition.aboveEditor,
+          toolbarType: ToolbarType.nativeScrollable,
+          dropdownBackgroundColor: Colors.white,
+          defaultToolbarButtons: [
+            const StyleButtons(),
+            const FontSettingButtons(fontSizeUnit: true),
+            const FontButtons(
+              clearAll: false,
+              bold: true,
+              italic: true,
+              underline: true,
+              strikethrough: true,
+              subscript: true,
+              superscript: true,
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: Colors.grey[200]!)),
+            const ColorButtons(),
+            const ListButtons(),
+            const ParagraphButtons(
+              alignLeft: true,
+              alignCenter: true,
+              alignRight: true,
+              alignJustify: true,
+              lineHeight: true,
+              caseConverter: true,
             ),
-            height: 300,
-            child: QuillEditor.basic(
-              controller: _quillController,
-              config: const QuillEditorConfig(
-                placeholder: 'Start typing your note...',
-                padding: EdgeInsets.symmetric(vertical: 16),
-              ),
+            const InsertButtons(
+              video: false,
+              audio: false,
+              table: true,
+              hr: true,
+              otherFile: false,
             ),
-          ),
-        ],
+          ],
+          customToolbarButtons: [
+            IconButton(
+              onPressed: _pickImage,
+              icon: const Icon(Icons.image_outlined, color: Colors.blueAccent),
+              tooltip: 'Insert Image',
+            ),
+          ],
+        ),
+        otherOptions: OtherOptions(
+          height: MediaQuery.of(context).size.height * 0.65,
+        ),
       ),
     );
   }

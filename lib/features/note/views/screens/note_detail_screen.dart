@@ -9,12 +9,10 @@ import 'package:pop/features/note/view_models/cubit/note_cubit.dart';
 import 'package:pop/features/note/view_models/cubit/note_state.dart';
 import 'package:pop/features/note/views/screens/add_note_screen.dart';
 import 'package:pop/core/components/full_screen_image_viewer.dart';
-import 'package:flutter_quill/flutter_quill.dart';
-import 'dart:convert';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:flutter_quill_to_pdf/flutter_quill_to_pdf.dart';
 
 class NoteDetailScreen extends StatefulWidget {
   final NoteModel note;
@@ -160,24 +158,6 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   }
 
   Widget _buildNoteContent(String title, String content) {
-    QuillController quillController;
-    try {
-      final parsed = jsonDecode(content);
-      if (parsed is List) {
-        quillController = QuillController(
-          document: Document.fromJson(parsed),
-          selection: const TextSelection.collapsed(offset: 0),
-          readOnly: true,
-        );
-      } else {
-        quillController = QuillController.basic();
-        quillController.document.insert(0, content);
-      }
-    } catch (_) {
-      quillController = QuillController.basic();
-      quillController.document.insert(0, content);
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -190,11 +170,16 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        QuillEditor.basic(
-          controller: quillController,
-          config: const QuillEditorConfig(
-            checkBoxReadOnly: true,
-          ),
+        Html(
+          data: content,
+          style: {
+            "body": Style(
+              fontSize: FontSize(16),
+              color: Colors.black87,
+              margin: Margins.zero,
+              padding: HtmlPaddings.zero,
+            ),
+          },
         ),
       ],
     );
@@ -202,39 +187,17 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
   Future<void> _exportToPdf(BuildContext context, NoteModel note) async {
     try {
-      List<dynamic>? deltaList;
-      try {
-        final parsed = jsonDecode(note.content);
-        if (parsed is List) deltaList = parsed;
-      } catch (_) {}
-
-      pw.Document doc;
-
-      if (deltaList != null) {
-        final pageFormat = PDFPageFormat.all(
-          width: PdfPageFormat.a4.width,
-          height: PdfPageFormat.a4.height,
-          margin: 32,
-        );
-
-        final pdfConverter = PDFConverter(
-          document: Document.fromJson(deltaList).toDelta(),
-          pageFormat: pageFormat,
-          fallbacks: <pw.Font>[],
-        );
-        doc = await pdfConverter.createDocument() ?? pw.Document();
-      } else {
-        doc = pw.Document();
-        doc.addPage(
-          pw.MultiPage(
-            pageFormat: PdfPageFormat.a4,
-            build: (context) => [
-              pw.Header(level: 0, child: pw.Text(note.title)),
-              pw.Paragraph(text: note.content),
-            ],
-          ),
-        );
-      }
+      final doc = pw.Document();
+      
+      doc.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          build: (context) => [
+            pw.Header(level: 0, child: pw.Text(note.title)),
+            pw.Paragraph(text: note.content.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), '')),
+          ],
+        ),
+      );
 
       await Printing.layoutPdf(
         onLayout: (PdfPageFormat format) async => doc.save(),

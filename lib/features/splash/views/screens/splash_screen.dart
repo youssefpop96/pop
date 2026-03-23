@@ -43,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: AppColors.kPrimaryColor,
       body: Center(
         child: Text(
-          'Pop',
+          'POP',
           style: TextStyle(
             color: Colors.white,
             fontSize: 48,

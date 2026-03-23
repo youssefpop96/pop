@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/components/custom_elevated_button.dart';
 import '../../../../../core/components/custom_text_form_field.dart';
+import '../../../../../core/utilities/styles/app_colors.dart';
 import '../../../../auth/widgets/auth_layout.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -70,7 +71,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF143BA),
+      backgroundColor: AppColors.kPrimaryColor,
       body: AuthLayout(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
