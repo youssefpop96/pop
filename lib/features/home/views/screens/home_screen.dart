@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:pop/core/utilities/styles/app_colors.dart';
 import 'package:pop/features/home/views/widgets/custom_search_bar.dart';
 import 'package:pop/features/home/views/widgets/home_folders_section.dart';
@@ -9,8 +7,8 @@ import 'package:pop/features/home/views/widgets/home_recent_notes_section.dart';
 import 'package:pop/features/note/view_models/cubit/note_cubit.dart';
 import 'package:pop/features/note/view_models/cubit/note_state.dart';
 import 'package:pop/features/note/views/screens/add_note_screen.dart';
-import 'package:pop/features/splash/views/screens/splash_screen.dart';
 import 'package:pop/features/home/views/screens/add_folder_screen.dart';
+import 'package:pop/features/profile/views/screens/profile_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -86,16 +84,12 @@ class HomeScreen extends StatelessWidget {
       centerTitle: true,
       actions: [
         IconButton(
-          icon: const Icon(Icons.logout, color: Colors.black54),
-          onPressed: () async {
-            await Supabase.instance.client.auth.signOut();
-            if (context.mounted) {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const SplashScreen()),
-                (route) => false,
-              );
-            }
+          icon: const Icon(Icons.person_outline, color: Colors.black),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ProfileScreen()),
+            );
           },
         ),
       ],
