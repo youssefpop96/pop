@@ -1,17 +1,15 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pop/core/utilities/styles/app_colors.dart';
-import 'package:pop/core/components/custom_text_form_field.dart';
-import 'package:pop/core/components/custom_elevated_button.dart';
-import 'package:pop/features/note/views/widgets/tag_chip.dart';
 import 'package:pop/features/note/view_models/cubit/note_cubit.dart';
 import 'package:pop/features/note/view_models/cubit/note_state.dart';
 import 'package:pop/core/models/folder_model.dart';
 import 'package:pop/core/models/note_model.dart';
-import 'package:pop/core/components/full_screen_image_viewer.dart';
-import 'package:html_editor_enhanced/html_editor.dart';
+import 'package:pop/features/note/views/widgets/tag_chip.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 
 class AddNoteScreen extends StatefulWidget {
   final String? initialFolderId;
@@ -25,18 +23,19 @@ class AddNoteScreen extends StatefulWidget {
 class _AddNoteScreenState extends State<AddNoteScreen> {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController tagController = TextEditingController();
-  final HtmlEditorController _controller = HtmlEditorController();
+  late quill.QuillController _controller;
+  final ScrollController _scrollController = ScrollController();
 
   String? selectedFolderId;
   List<String> tags = [];
   List<String> imageUrls = [];
   bool isUploading = false;
-
-  final ImagePicker _picker = ImagePicker();
+  int pageCount = 1;
 
   @override
   void initState() {
     super.initState();
+    _initEditor();
     if (widget.existingNote != null) {
       titleController.text = widget.existingNote!.title;
       selectedFolderId = widget.existingNote!.folderId;
@@ -47,32 +46,45 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
     }
   }
 
-  Future<void> _pickImage() async {
-    final cubit = context.read<NoteCubit>();
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() => isUploading = true);
+  void _initEditor() {
+    if (widget.existingNote != null &&
+        widget.existingNote!.content.isNotEmpty) {
       try {
-        final url = await cubit.uploadImage(File(image.path));
-        if (!mounted) return;
-        setState(() {
-          imageUrls.add(url);
-          isUploading = false;
-        });
+        final doc = quill.Document.fromJson(
+          jsonDecode(widget.existingNote!.content),
+        );
+        _controller = quill.QuillController(
+          document: doc,
+          selection: const TextSelection.collapsed(offset: 0),
+        );
       } catch (e) {
-        if (!mounted) return;
-        setState(() => isUploading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+        _controller = quill.QuillController.basic();
       }
+    } else {
+      _controller = quill.QuillController.basic();
     }
   }
+
   @override
   void dispose() {
     titleController.dispose();
     tagController.dispose();
+    _controller.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _addPage() {
+    setState(() {
+      pageCount++;
+    });
+    Future.delayed(const Duration(milliseconds: 100), () {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   @override
@@ -80,7 +92,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
     bool isEditing = widget.existingNote != null;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF2F2F7),
       appBar: _buildAppBar(context, isEditing),
       body: BlocBuilder<NoteCubit, NoteState>(
         builder: (context, state) {
@@ -92,291 +104,27 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
             }
           }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildFieldTitle('Title'),
-                const SizedBox(height: 8),
-                CustomTextFormField(
-                  hintText: 'Note Title',
-                  controller: titleController,
-                ),
-                const SizedBox(height: 24),
-                _buildFieldTitle('Content'),
-                const SizedBox(height: 8),
-                _buildContentEditor(),
-                const SizedBox(height: 12),
-                if (isUploading)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Uploading image...',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                _buildImageGrid(),
-                const SizedBox(height: 24),
-                _buildFieldTitle('Folder'),
-                const SizedBox(height: 8),
-                _buildFolderSelector(folders),
-                const SizedBox(height: 24),
-                _buildFieldTitle('Tags'),
-                const SizedBox(height: 8),
-                CustomTextFormField(
-                  hintText: 'Type tag and press Enter...',
-                  controller: tagController,
-                  onFieldSubmitted: (val) {
-                    if (val.isNotEmpty) {
-                      setState(() {
-                        tags.add(val);
-                        tagController.clear();
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(height: 12),
-                _buildAddedTags(),
-                const SizedBox(height: 40),
-                CustomElevatedButton(
-                  text: isEditing ? 'Update Note' : 'Save Note',
-                  onPressed: () async {
-                    if (titleController.text.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please enter a title')),
-                      );
-                      return;
-                    }
-                    if (selectedFolderId == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please select a folder')),
-                      );
-                      return;
-                    }
-
-                    final contentText = await _controller.getText();
-                    if (!mounted) return;
-
-                    final cubit = context.read<NoteCubit>();
-
-                    if (isEditing) {
-                      cubit.updateNote(
-                        widget.existingNote!.copyWith(
-                          title: titleController.text,
-                          content: contentText,
-                          folderId: selectedFolderId!,
-                          tags: tags,
-                          images: imageUrls,
-                        ),
-                      );
-                    } else {
-                      cubit.addNote(
-                        title: titleController.text,
-                        content: contentText,
-                        folderId: selectedFolderId!,
-                        tags: tags,
-                        images: imageUrls,
-                      );
-                    }
-
-                    if (mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            isEditing
-                                ? 'Note Updated Successfully!'
-                                : 'Note Saved Successfully!',
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                ),
-                const SizedBox(height: 40),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  AppBar _buildAppBar(BuildContext context, bool isEditing) {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.black),
-        onPressed: () => Navigator.pop(context),
-      ),
-      title: Text(
-        isEditing ? 'Edit Note' : 'Add New Note',
-        style: const TextStyle(
-          color: Colors.black,
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      centerTitle: true,
-    );
-  }
-
-  Widget _buildFieldTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-        color: Colors.black87,
-      ),
-    );
-  }
-
-  Widget _buildContentEditor() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: HtmlEditor(
-        controller: _controller,
-        htmlEditorOptions: HtmlEditorOptions(
-          hint: 'Start typing your note...',
-          initialText: widget.existingNote?.content,
-          shouldEnsureVisible: true,
-        ),
-        htmlToolbarOptions: HtmlToolbarOptions(
-          toolbarPosition: ToolbarPosition.aboveEditor,
-          toolbarType: ToolbarType.nativeScrollable,
-          dropdownBackgroundColor: Colors.white,
-          defaultToolbarButtons: [
-            const StyleButtons(),
-            const FontSettingButtons(fontSizeUnit: true),
-            const FontButtons(
-              clearAll: false,
-              bold: true,
-              italic: true,
-              underline: true,
-              strikethrough: true,
-              subscript: true,
-              superscript: true,
-            ),
-            const ColorButtons(),
-            const ListButtons(),
-            const ParagraphButtons(
-              alignLeft: true,
-              alignCenter: true,
-              alignRight: true,
-              alignJustify: true,
-              lineHeight: true,
-              caseConverter: true,
-            ),
-            const InsertButtons(
-              video: false,
-              audio: false,
-              table: true,
-              hr: true,
-              otherFile: false,
-            ),
-          ],
-          customToolbarButtons: [
-            IconButton(
-              onPressed: _pickImage,
-              icon: const Icon(Icons.image_outlined, color: Colors.blueAccent),
-              tooltip: 'Insert Image',
-            ),
-          ],
-        ),
-        otherOptions: OtherOptions(
-          height: MediaQuery.of(context).size.height * 0.65,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImageGrid() {
-    if (imageUrls.isEmpty) return const SizedBox();
-    return SizedBox(
-      height: 90,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: imageUrls.length,
-        itemBuilder: (context, index) {
-          final imageUrl = imageUrls[index];
-          return Stack(
+          return Column(
             children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => FullScreenImageViewer(
-                            imageUrl: imageUrl,
-                            tag: 'add_note_img_$index',
-                          ),
-                    ),
-                  );
-                },
-                child: Hero(
-                  tag: 'add_note_img_$index',
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    margin: const EdgeInsets.only(right: 12, top: 8),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      image: DecorationImage(
-                        image: NetworkImage(imageUrl),
-                        fit: BoxFit.cover,
+              _buildToolbar(),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      // Title & Meta Info Card
+                      _buildHeaderInfo(folders),
+                      const SizedBox(height: 20),
+                      // Paper Sheets
+                      ...List.generate(
+                        pageCount,
+                        (index) => _buildPaperSheet(index),
                       ),
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 4,
-                top: 0,
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      imageUrls.removeAt(index);
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.close,
-                      color: Colors.white,
-                      size: 12,
-                    ),
+                      // Add Page Action
+                      _buildAddPageButton(),
+                      const SizedBox(height: 50),
+                    ],
                   ),
                 ),
               ),
@@ -387,7 +135,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
     );
   }
 
-  Widget _buildFolderSelector(List<FolderModel> folders) {
+  Widget _buildHeaderInfo(List<FolderModel> folders) {
     String folderName = 'Select Folder';
     if (selectedFolderId != null && folders.isNotEmpty) {
       final selected = folders.firstWhere(
@@ -397,47 +145,210 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
       folderName = selected.name;
     }
 
-    return GestureDetector(
-      onTap: () {
-        _showFolderPicker(folders);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        decoration: BoxDecoration(
-          color: AppColors.kLightGreyColor,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: AppColors.kGradientBlue.first,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Icon(
-                    Icons.folder,
-                    color: Colors.white,
-                    size: 14,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  folderName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.90,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller: titleController,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            decoration: const InputDecoration(
+              hintText: 'Untitled Document',
+              border: InputBorder.none,
             ),
-            const Icon(Icons.keyboard_arrow_down, color: Colors.black54),
+          ),
+          const Divider(),
+          Row(
+            children: [
+              // Folder Selector
+              InkWell(
+                onTap: () => _showFolderPicker(folders),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.kPrimaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.folder_open,
+                        size: 16,
+                        color: AppColors.kPrimaryColor,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        folderName,
+                        style: const TextStyle(
+                          color: AppColors.kPrimaryColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Tag Adder
+              Expanded(
+                child: TextField(
+                  controller: tagController,
+                  onSubmitted: (val) {
+                    if (val.isNotEmpty) {
+                      setState(() {
+                        tags.add(val);
+                        tagController.clear();
+                      });
+                    }
+                  },
+                  decoration: const InputDecoration(
+                    hintText: 'Add Tag...',
+                    isDense: true,
+                    border: InputBorder.none,
+                    hintStyle: TextStyle(fontSize: 14),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (tags.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 6,
+              children: tags
+                  .map(
+                    (t) => TagChip(
+                      label: t,
+                      onTap: () => setState(() => tags.remove(t)),
+                      icon: Icons.close,
+                    ),
+                  )
+                  .toList(),
+            ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaperSheet(int index) {
+    double width = MediaQuery.of(context).size.width * 0.92;
+    double height = width * 1.41;
+
+    return Center(
+      child: Container(
+        width: width,
+        height: height,
+        margin: const EdgeInsets.only(bottom: 25),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: index == 0
+            ? Padding(
+                padding: const EdgeInsets.all(45),
+                child: quill.QuillEditor.basic(
+                  controller: _controller,
+                  configurations: const quill.QuillEditorConfigurations(
+                    placeholder: 'Start writing your document...',
+                    expands: true,
+                  ),
+                ),
+              )
+            : Stack(
+                children: [
+                  Positioned(
+                    right: 20,
+                    bottom: 20,
+                    child: Text(
+                      'Page ${index + 1}',
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ),
+                  const Center(
+                    child: Text(
+                      "Content continues from previous page",
+                      style: TextStyle(color: Colors.black12, fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildAddPageButton() {
+    return InkWell(
+      onTap: _addPage,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.add_circle, color: Colors.blue, size: 20),
+            SizedBox(width: 8),
+            Text("Add Page"),
+          ],
+        ),
+      ),
+    );
+  }
+
+  AppBar _buildAppBar(BuildContext context, bool isEditing) {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.close, color: Colors.black),
+        onPressed: () => Navigator.pop(context),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _saveNote,
+          child: const Text(
+            'Save',
+            style: TextStyle(
+              color: AppColors.kPrimaryColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildToolbar() {
+    return Container(
+      color: Colors.white,
+      child: quill.QuillSimpleToolbar(
+        controller: _controller,
+        configurations: const quill.QuillSimpleToolbarConfigurations(
+          showSearchButton: false,
+          showFontSize: true,
+          multiRowsDisplay: false,
         ),
       ),
     );
@@ -446,63 +357,63 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   void _showFolderPicker(List<FolderModel> folders) {
     showModalBottomSheet(
       context: context,
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Select Folder',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: folders.length,
-                  itemBuilder: (context, index) {
-                    final folder = folders[index];
-                    return ListTile(
-                      leading: const Icon(Icons.folder, color: Colors.blue),
-                      title: Text(folder.name),
-                      onTap: () {
-                        setState(() {
-                          selectedFolderId = folder.id;
-                        });
-                        Navigator.pop(context);
-                      },
-                    );
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Select Folder',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: folders.length,
+                itemBuilder: (context, index) => ListTile(
+                  leading: const Icon(Icons.folder, color: Colors.blue),
+                  title: Text(folders[index].name),
+                  onTap: () {
+                    setState(() => selectedFolderId = folders[index].id);
+                    Navigator.pop(context);
                   },
                 ),
               ),
-            ],
-          ),
-        );
-      },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildAddedTags() {
-    return Wrap(
-      spacing: 8,
-      children: tags
-          .map(
-            (tag) => TagChip(
-              label: tag,
-              backgroundColor: AppColors.kGradientBlue.first.withValues(
-                alpha: 0.1,
-              ),
-              textColor: AppColors.kGradientBlue.first,
-              icon: Icons.close,
-              onTap: () {
-                setState(() {
-                  tags.remove(tag);
-                });
-              },
-            ),
-          )
-          .toList(),
-    );
+  Future<void> _saveNote() async {
+    if (titleController.text.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a title')));
+      return;
+    }
+    final contentJson = jsonEncode(_controller.document.toDelta().toJson());
+
+    final cubit = context.read<NoteCubit>();
+    if (widget.existingNote != null) {
+      cubit.updateNote(
+        widget.existingNote!.copyWith(
+          title: titleController.text,
+          content: contentJson,
+          folderId: selectedFolderId ?? '0',
+          tags: tags,
+        ),
+      );
+    } else {
+      cubit.addNote(
+        title: titleController.text,
+        content: contentJson,
+        folderId: selectedFolderId ?? '0',
+        tags: tags,
+      );
+    }
+    Navigator.pop(context);
   }
 }

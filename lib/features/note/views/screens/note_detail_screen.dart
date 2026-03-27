@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,7 +10,7 @@ import 'package:pop/features/note/view_models/cubit/note_cubit.dart';
 import 'package:pop/features/note/view_models/cubit/note_state.dart';
 import 'package:pop/features/note/views/screens/add_note_screen.dart';
 import 'package:pop/core/components/full_screen_image_viewer.dart';
-import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -24,6 +25,41 @@ class NoteDetailScreen extends StatefulWidget {
 
 class _NoteDetailScreenState extends State<NoteDetailScreen> {
   bool isAddingImage = false;
+  late quill.QuillController _quillController;
+
+  @override
+  void initState() {
+    super.initState();
+    _initQuillController(widget.note.content);
+  }
+
+  void _initQuillController(String content) {
+    if (content.isNotEmpty) {
+      try {
+        final doc = quill.Document.fromJson(jsonDecode(content));
+        _quillController = quill.QuillController(
+          document: doc,
+          selection: const TextSelection.collapsed(offset: 0),
+          readOnly: true,
+        );
+      } catch (e) {
+        // Fallback for non-JSON content
+        _quillController = quill.QuillController(
+          document: quill.Document()..insert(0, content),
+          selection: const TextSelection.collapsed(offset: 0),
+          readOnly: true,
+        );
+      }
+    } else {
+      _quillController = quill.QuillController.basic(readOnly: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _quillController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,10 +67,14 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       builder: (context, state) {
         NoteModel currentNote = widget.note;
         if (state is NoteSuccess) {
-          currentNote = state.recentNotes.firstWhere(
+          final updatedNote = state.recentNotes.firstWhere(
             (n) => n.id == widget.note.id,
             orElse: () => widget.note,
           );
+          if (updatedNote.content != currentNote.content) {
+            _initQuillController(updatedNote.content);
+          }
+          currentNote = updatedNote;
         }
 
         return Scaffold(
@@ -48,7 +88,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 children: [
                   _buildDateHeader(currentNote.createdAt),
                   const SizedBox(height: 20),
-                  _buildNoteContent(currentNote.title, currentNote.content),
+                  _buildNoteContent(currentNote.title),
                   const SizedBox(height: 24),
                   _buildPhotosSection(context, currentNote),
                   const SizedBox(height: 24),
@@ -83,7 +123,10 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       centerTitle: true,
       actions: [
         IconButton(
-          icon: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.kPrimaryColor),
+          icon: const Icon(
+            Icons.picture_as_pdf_outlined,
+            color: AppColors.kPrimaryColor,
+          ),
           onPressed: () => _exportToPdf(context, currentNote),
         ),
         IconButton(
@@ -108,28 +151,27 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   void _showDeleteDialog(BuildContext context, NoteModel currentNote) {
     showDialog(
       context: context,
-      builder:
-          (diagContext) => AlertDialog(
-            title: const Text('Delete Note'),
-            content: const Text('Are you sure you want to delete this note?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(diagContext),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () {
-                  context.read<NoteCubit>().deleteNote(currentNote.id);
-                  Navigator.pop(diagContext);
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('Note deleted')));
-                },
-                child: const Text('Delete', style: TextStyle(color: Colors.red)),
-              ),
-            ],
+      builder: (diagContext) => AlertDialog(
+        title: const Text('Delete Note'),
+        content: const Text('Are you sure you want to delete this note?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(diagContext),
+            child: const Text('Cancel'),
           ),
+          TextButton(
+            onPressed: () {
+              context.read<NoteCubit>().deleteNote(currentNote.id);
+              Navigator.pop(diagContext);
+              Navigator.pop(context);
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Note deleted')));
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -157,7 +199,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     );
   }
 
-  Widget _buildNoteContent(String title, String content) {
+  Widget _buildNoteContent(String title) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -170,16 +212,14 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        Html(
-          data: content,
-          style: {
-            "body": Style(
-              fontSize: FontSize(16),
-              color: Colors.black87,
-              margin: Margins.zero,
-              padding: HtmlPaddings.zero,
-            ),
-          },
+        quill.QuillEditor.basic(
+          controller: _quillController,
+          configurations: const quill.QuillEditorConfigurations(
+            readOnly: true,
+            expands: false,
+            padding: EdgeInsets.zero,
+            showCursor: false,
+          ),
         ),
       ],
     );
@@ -188,13 +228,30 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   Future<void> _exportToPdf(BuildContext context, NoteModel note) async {
     try {
       final doc = pw.Document();
-      
+
+      // Extract plain text for simple PDF version
+      // In a real app, you might want to map Quill attributes to PDF widgets
+      final plainText = _quillController.document.toPlainText();
+
       doc.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           build: (context) => [
-            pw.Header(level: 0, child: pw.Text(note.title)),
-            pw.Paragraph(text: note.content.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), '')),
+            pw.Header(
+              level: 0,
+              child: pw.Text(
+                note.title,
+                style: pw.TextStyle(
+                  fontSize: 24,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ),
+            pw.SizedBox(height: 20),
+            pw.Paragraph(
+              text: plainText,
+              style: const pw.TextStyle(fontSize: 14),
+            ),
           ],
         ),
       );
@@ -204,9 +261,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to generate PDF: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to generate PDF: $e')));
       }
     }
   }
@@ -241,11 +298,10 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder:
-                            (context) => FullScreenImageViewer(
-                              imageUrl: img,
-                              tag: 'note_${currentNote.id}_img_$idx',
-                            ),
+                        builder: (context) => FullScreenImageViewer(
+                          imageUrl: img,
+                          tag: 'note_${currentNote.id}_img_$idx',
+                        ),
                       ),
                     );
                   },
@@ -311,15 +367,15 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         final updatedImages = List<String>.from(currentNote.images)..add(url);
         await cubit.updateNote(currentNote.copyWith(images: updatedImages));
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Image added!')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Image added!')));
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to add image: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to add image: $e')));
         }
       } finally {
         if (mounted) {
