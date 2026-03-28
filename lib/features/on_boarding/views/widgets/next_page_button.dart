@@ -1,70 +1,57 @@
 import 'package:flutter/material.dart';
-import '../../../auth/sign_in/views/screens/sign_in_screen.dart';
-import '../../../auth/sign_up/views/screens/sign_up_screen.dart';
+import 'package:pop/core/components/custom_elevated_button.dart';
+import 'package:pop/core/utilities/styles/app_colors.dart';
+import 'package:pop/core/utilities/styles/app_text_styles.dart';
+import 'package:pop/features/auth/sign_in/views/screens/sign_in_screen.dart';
+import 'package:pop/features/auth/sign_up/views/screens/sign_up_screen.dart';
 
 class NextPageButton extends StatelessWidget {
   const NextPageButton({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SignInScreen()),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1A1A1A),
-              foregroundColor: Colors.white,
-              minimumSize: const Size(120, 56),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
+    return Column(
+      children: [
+        CustomElevatedButton(
+          text: 'Get Started',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SignUpScreen()),
+            );
+          },
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'ALREADY HAVE AN ACCOUNT? ',
+              style: AppTextStyles.labelMd.copyWith(
+                color: Colors.black38,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
               ),
-              elevation: 0,
             ),
-            child: const Text(
-              'Log In',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: GestureDetector(
+            GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                  MaterialPageRoute(builder: (context) => const SignInScreen()),
                 );
               },
-              child: RichText(
-                text: const TextSpan(
-                  style: TextStyle(
-                    color: Colors.black54,
-                    fontSize: 13,
-                    height: 1.2,
-                  ),
-                  children: [
-                    TextSpan(text: "Don't have\naccount? "),
-                    TextSpan(
-                      text: "Create\nnow",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+              child: Text(
+                'LOG IN',
+                style: AppTextStyles.labelMd.copyWith(
+                  color: AppColors.kPrimary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }

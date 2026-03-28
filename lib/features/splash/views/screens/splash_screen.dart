@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/utilities/styles/app_colors.dart';
+import 'package:pop/core/utilities/styles/app_text_styles.dart';
+import 'package:pop/features/auth/widgets/auth_layout.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:pop/features/home/views/screens/home_screen.dart';
-import '../../../on_boarding/views/screens/on_boarding_screen.dart';
+import 'package:pop/features/home/views/screens/luminous_main_screen.dart';
+import 'package:pop/features/on_boarding/views/screens/on_boarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -22,12 +23,12 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
 
-    final session = Supabase.instance.client.auth.currentSession;
+    final session = Supabase.instance.client.auth.currentUser;
 
     if (session != null) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(builder: (context) => const LuminousMainScreen()),
       );
     } else {
       Navigator.pushReplacement(
@@ -39,18 +40,43 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: AppColors.kPrimaryColor,
-      body: Center(
-        child: Text(
-          'POP',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 48,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 4,
+    return Scaffold(
+      body: Stack(
+        children: [
+          const LuminousBackground(),
+          Center(
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(seconds: 2),
+              curve: Curves.easeOutExpo,
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.scale(
+                    scale: 0.8 + (0.2 * value),
+                    child: child,
+                  ),
+                );
+              },
+              child: Text(
+                'POP',
+                style: AppTextStyles.headlineLg.copyWith(
+                  color: Colors.white,
+                  fontSize: 72,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 20,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      offset: const Offset(0, 10),
+                      blurRadius: 20,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

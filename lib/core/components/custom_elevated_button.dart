@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../utilities/styles/app_colors.dart';
+import 'package:pop/core/utilities/styles/app_text_styles.dart';
+import 'package:pop/core/utilities/styles/app_colors.dart';
 
 class CustomElevatedButton extends StatelessWidget {
   final String text;
@@ -23,40 +24,40 @@ class CustomElevatedButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: backgroundColor == null
-            ? const LinearGradient(
-                colors: AppColors.kGradientBlue,
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              )
-            : null,
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(borderRadius ?? 16),
+        color: backgroundColor ?? AppColors.kPrimary,
+        borderRadius: BorderRadius.circular(borderRadius ?? 100),
         boxShadow: backgroundColor == null
             ? [
                 BoxShadow(
-                  color: AppColors.kPrimaryColor.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+                  color: AppColors.kPrimary.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
               ]
             : null,
       ),
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          foregroundColor: textColor ?? Colors.white,
-          minimumSize: minimumSize ?? const Size(double.infinity, 56),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(borderRadius ?? 16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(borderRadius ?? 100),
+          onTap: onPressed,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 22),
+            constraints: BoxConstraints(
+              minHeight: minimumSize?.height ?? 64,
+              minWidth: minimumSize?.width ?? double.infinity,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              text.toUpperCase(),
+              style: AppTextStyles.labelMd.copyWith(
+                color: textColor ?? Colors.white,
+                letterSpacing: 2.0,
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
           ),
-          elevation: 0,
-        ),
-        child: Text(
-          text,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
     );

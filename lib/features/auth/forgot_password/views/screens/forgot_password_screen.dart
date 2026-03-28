@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/components/custom_elevated_button.dart';
-import '../../../../../core/components/custom_text_form_field.dart';
-import '../../../../../core/utilities/styles/app_colors.dart';
-import '../../../../auth/widgets/auth_layout.dart';
+import 'package:pop/core/components/custom_elevated_button.dart';
+import 'package:pop/core/components/custom_text_form_field.dart';
+import 'package:pop/core/utilities/styles/app_colors.dart';
+import 'package:pop/core/utilities/styles/app_text_styles.dart';
+import 'package:pop/features/auth/widgets/auth_layout.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -25,9 +26,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _resetPassword() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your email address')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: const Text('EMAIL IS REQUIRED'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.redAccent,
+      ));
       return;
     }
 
@@ -40,24 +43,28 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       await supabase.auth.resetPasswordForEmail(email);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password reset link sent! Check your email.'),
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('RESET LINK SENT! CHECK YOUR EMAIL'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.kPrimary,
+        ));
         Navigator.pop(context);
       }
     } on AuthException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(e.message.toUpperCase()),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.redAccent,
+        ));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An unexpected error occurred')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('AN UNEXPECTED ERROR OCCURRED'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.redAccent,
+        ));
       }
     } finally {
       if (mounted) {
@@ -71,7 +78,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.kPrimaryColor,
+      backgroundColor: Colors.transparent,
       body: AuthLayout(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,40 +86,44 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Forgot Password',
-                  style: TextStyle(
+                Text(
+                  'RESET PASSWORD',
+                  style: AppTextStyles.headlineLg.copyWith(
                     fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close, color: Colors.black54),
+                  icon: const Icon(Icons.close_rounded, color: Colors.black26),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            const Text(
-              'Enter your email to receive a password reset link',
-              style: TextStyle(color: Colors.black45, fontSize: 14),
+            const SizedBox(height: 12),
+            Text(
+              'ENTER YOUR EMAIL ADDRESS TO RECEIVE A SECURE RESET LINK.',
+              style: AppTextStyles.labelMd.copyWith(
+                color: Colors.black38,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+              ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 56),
             CustomTextFormField(
               hintText: 'Email Address',
+              controller: _emailController,
               keyboardType: TextInputType.emailAddress,
-              onChanged: (val) {
-                _emailController.text = val;
-              },
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 48),
             _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : CustomElevatedButton(
-                    text: 'Send Reset Link',
+                    text: 'Send link',
                     onPressed: _resetPassword,
                   ),
+            const SizedBox(height: 40),
           ],
         ),
       ),

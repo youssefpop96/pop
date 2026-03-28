@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
           ),
         ],
         child: MaterialApp(
-          title: 'Pulse Care',
+          title: 'POP',
           debugShowCheckedModeBanner: false,
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
           ],
           theme: ThemeData(
             useMaterial3: true,
-            fontFamily: 'Roboto',
+            fontFamily: 'Inter',
             scaffoldBackgroundColor: Colors.white,
           ),
           home: const AuthWrapper(),

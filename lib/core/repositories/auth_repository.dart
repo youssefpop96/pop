@@ -53,4 +53,16 @@ class AuthRepository {
   Future<void> signOut() async {
     await _supabase.auth.signOut();
   }
+
+  Future<UserResponse> updateUserMetadata(Map<String, dynamic> data) async {
+    return await _supabase.auth.updateUser(
+      UserAttributes(data: data),
+    );
+  }
+
+  Future<UserResponse> updatePassword(String newPassword) async {
+    return await _supabase.auth.updateUser(
+      UserAttributes(password: newPassword),
+    );
+  }
 }

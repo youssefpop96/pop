@@ -11,27 +11,12 @@ class OnboardingPageItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: item.bgColor,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 100),
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: 1.0),
-            duration: const Duration(milliseconds: 800),
-            builder: (context, value, child) {
-              return Opacity(
-                opacity: value,
-                child: Transform.translate(
-                  offset: Offset(0, 20 * (1 - value)),
-                  child: child,
-                ),
-              );
-            },
-            child: Text(item.title, style: AppTextStyles.title64Black900),
-          ),
-          const Spacer(),
+          const Spacer(flex: 2),
           Center(
             child: TweenAnimationBuilder<double>(
               tween: Tween(begin: 0.0, end: 1.0),
@@ -39,33 +24,68 @@ class OnboardingPageItem extends StatelessWidget {
               curve: Curves.easeInOutSine,
               builder: (context, value, child) {
                 return Transform.translate(
-                  offset: Offset(0, 10 * (1 - (2 * value - 1).abs())),
+                  offset: Offset(0, 15 * (1 - (2 * value - 1).abs())),
                   child: child,
                 );
               },
-              child: Image.asset(
-                item.imagePath,
-                height: 320,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.notes, size: 100, color: Colors.black26),
+              child: Container(
+                padding: const EdgeInsets.all(40),
+                decoration: BoxDecoration(
+                  color: item.bgColor.withValues(alpha: 0.3),
+                  shape: BoxShape.circle,
+                ),
+                child: Image.asset(
+                  item.imagePath,
+                  height: 280,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) =>
+                      Icon(Icons.notes_rounded, size: 120, color: item.bgColor),
+                ),
               ),
             ),
           ),
-          const Spacer(),
-          Padding(
-            padding: const EdgeInsets.only(right: 40),
-            child: Text(
-              item.description,
-              style: AppTextStyles.title18Black500.copyWith(
-                color: Colors.black87,
-                height: 1.5,
-              ),
+          const Spacer(flex: 3),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 1000),
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, 30 * (1 - value)),
+                  child: child,
+                ),
+              );
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title.toUpperCase(),
+                  style: AppTextStyles.headlineLg.copyWith(
+                    fontSize: 32,
+                    height: 1.1,
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  item.description.toUpperCase(),
+                  style: AppTextStyles.labelMd.copyWith(
+                    color: Colors.black26,
+                    fontSize: 11,
+                    height: 1.6,
+                    letterSpacing: 1.5,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 48),
+          const SizedBox(height: 64),
           const NextPageButton(),
-          const SizedBox(height: 40),
+          const SizedBox(height: 60),
         ],
       ),
     );

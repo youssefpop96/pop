@@ -1,62 +1,70 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppTextStyles {
-  static const TextStyle title64Black900 = TextStyle(
-    fontSize: 64,
-    fontWeight: FontWeight.w900,
-    height: 1.0,
-    color: AppColors.kPrimaryColor,
-    letterSpacing: -1,
+  // Luminous Typography System
+  static TextStyle displayLg = GoogleFonts.spaceGrotesk(
+    fontSize: 56, // 3.5rem
+    fontWeight: FontWeight.bold,
+    letterSpacing: -1.12, // -0.02em
+    color: AppColors.kOnSurface,
+    height: 1.1,
   );
 
-  static const TextStyle title48BlackBold = TextStyle(
+  static TextStyle displayMd = GoogleFonts.spaceGrotesk(
+    fontSize: 32,
+    fontWeight: FontWeight.bold,
+    color: AppColors.kOnSurface,
+    height: 1.2,
+  );
+
+  static TextStyle headlineLg = GoogleFonts.spaceGrotesk(
     fontSize: 48,
     fontWeight: FontWeight.bold,
-    color: Colors.black,
-    height: 1.0,
+    color: AppColors.kOnSurface,
+    height: 1.2,
   );
 
-  static const TextStyle title32White900 = TextStyle(
-    color: Colors.white,
-    fontSize: 32,
-    fontWeight: FontWeight.w900,
-    letterSpacing: 2,
-  );
-
-  static const TextStyle title28Black87Bold = TextStyle(
-    fontSize: 28,
-    fontWeight: FontWeight.bold,
-    color: Colors.black87,
-  );
-
-  static const TextStyle title24BlackBold = TextStyle(
+  static TextStyle headlineMd = GoogleFonts.spaceGrotesk(
     fontSize: 24,
     fontWeight: FontWeight.bold,
-    color: Colors.black,
+    color: AppColors.kOnSurface,
   );
 
-  static const TextStyle title18Black500 = TextStyle(
+  static TextStyle headlineSm = GoogleFonts.spaceGrotesk(
     fontSize: 18,
-    height: 1.3,
-    fontWeight: FontWeight.w500,
-    color: AppColors.kPrimaryColor,
+    fontWeight: FontWeight.bold,
+    color: AppColors.kOnSurface,
   );
 
-  static const TextStyle title16GreyW500 = TextStyle(
-    fontSize: 16,
-    color: Colors.grey,
-    fontWeight: FontWeight.w500,
+  static TextStyle bodyLg = GoogleFonts.inter(
+    fontSize: 18,
+    color: AppColors.kOnSurface.withValues(alpha: 0.8),
+    height: 1.6,
   );
 
-  static const TextStyle title14Black600 = TextStyle(
+  static TextStyle bodyMd = GoogleFonts.inter(
+    fontSize: 14, // 0.875rem
+    color: AppColors.kOnSurface.withValues(alpha: 0.8),
+    height: 1.6,
+  );
+
+  static TextStyle labelMd = GoogleFonts.inter(
+    fontSize: 12,
     fontWeight: FontWeight.w600,
-    fontSize: 14,
+    color: AppColors.kSecondary,
+    letterSpacing: 0.5,
   );
 
-  static const TextStyle body18Black87 = TextStyle(
-    fontSize: 18,
-    color: Colors.black87,
-    height: 1.5,
-  );
+  // Compatibility Aliases (to be replaced)
+  static TextStyle get title64Black900 => displayLg.copyWith(fontSize: 64);
+  static TextStyle get title48BlackBold => displayLg.copyWith(fontSize: 48);
+  static TextStyle get title32White900 => displayMd.copyWith(color: Colors.white, fontSize: 32);
+  static TextStyle get title28Black87Bold => displayMd.copyWith(fontSize: 28);
+  static TextStyle get title24BlackBold => headlineMd;
+  static TextStyle get title18Black500 => bodyMd.copyWith(fontSize: 18, color: AppColors.kPrimary, fontWeight: FontWeight.w500);
+  static TextStyle get title16GreyW500 => bodyMd.copyWith(fontSize: 16, color: Colors.grey);
+  static TextStyle get title14Black600 => bodyMd.copyWith(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.kOnSurface);
+  static TextStyle get body18Black87 => bodyMd.copyWith(fontSize: 18);
 }

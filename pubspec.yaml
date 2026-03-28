@@ -20,6 +20,11 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_quill: ^11.5.0
+  htmltopdfwidgets: ^2.0.1
+  google_fonts: ^8.0.2
+  flutter_animate: ^4.5.2
+  glass_kit: ^4.0.2
+  shared_preferences: ^2.5.4
 
 dev_dependencies:
   flutter_test:

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pop/features/note/view_models/cubit/note_cubit.dart';
-import '../../../../../core/utilities/styles/app_colors.dart';
+import 'package:pop/core/utilities/styles/app_colors.dart';
+import 'package:pop/core/utilities/styles/app_text_styles.dart';
 
 class CustomSearchBar extends StatelessWidget {
   const CustomSearchBar({super.key});
@@ -10,14 +11,14 @@ class CustomSearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.kLightGreyColor, width: 2),
+        color: Colors.white.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -25,13 +26,14 @@ class CustomSearchBar extends StatelessWidget {
         onChanged: (value) {
           context.read<NoteCubit>().searchNotes(value);
         },
-        decoration: const InputDecoration(
-          hintText: 'Search notes...',
-          hintStyle: TextStyle(color: Colors.black38, fontSize: 16),
-          prefixIcon: Icon(Icons.search, color: Colors.black38),
-          suffixIcon: Icon(Icons.mic_none, color: Colors.black38),
+        style: AppTextStyles.bodyLg,
+        decoration: InputDecoration(
+          hintText: 'SEARCH YOUR THOUGHTS...',
+          hintStyle: AppTextStyles.labelMd.copyWith(color: Colors.black26),
+          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.kPrimary, size: 22),
+          suffixIcon: const Icon(Icons.tune_rounded, color: AppColors.kPrimary, size: 22),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(vertical: 20),
         ),
       ),
     );

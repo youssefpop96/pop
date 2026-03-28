@@ -33,10 +33,10 @@ class NoteCubit extends Cubit<NoteState> {
 
   Future<void> _ensureDefaultFoldersExist() async {
     final defaultFolders = [
-      {'name': 'Personal', 'color_index': 0, 'icon_name': 'person'},
-      {'name': 'Work', 'color_index': 1, 'icon_name': 'work'},
-      {'name': 'Study', 'color_index': 2, 'icon_name': 'school'},
-      {'name': 'Ideas', 'color_index': 3, 'icon_name': 'lightbulb'},
+      {'name': 'Personal', 'color_index': 0, 'icon_name': 'icon_2'},
+      {'name': 'Work', 'color_index': 1, 'icon_name': 'icon_1'},
+      {'name': 'Study', 'color_index': 2, 'icon_name': 'icon_4'},
+      {'name': 'Ideas', 'color_index': 3, 'icon_name': 'icon_4'},
     ];
 
     for (var f in defaultFolders) {

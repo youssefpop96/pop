@@ -19,56 +19,36 @@ class HomeFoldersSection extends StatelessWidget {
   Widget build(BuildContext context) {
     if (folders.isEmpty) return const SizedBox();
 
-    final List<List<Color>> gradientPool = [
-      AppColors.kGradientBlue,
-      AppColors.kGradientGreen,
-      AppColors.kGradientPurple,
-      AppColors.kGradientOrange,
-      AppColors.kGradientPink,
-      AppColors.kGradientTeal,
-    ];
-
-    final List<IconData> iconPool = [
-      Icons.folder,
-      Icons.business_center,
-      Icons.videocam,
-      Icons.home,
-      Icons.description,
-      Icons.stars,
-    ];
-
     return SizedBox(
-      height: 110,
+      height: 160,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: folders.length,
-        padding: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         itemBuilder: (context, index) {
           final folder = folders[index];
 
-          // Calculate notes count for this folder
-          final count = notes
-              .where((note) => note.folderId == folder.id)
-              .length;
-          final countLabel = count == 1 ? '1 Note' : '$count Notes';
+          // Get color based on colorIndex
+          final color = AppColors.kFolderColors[folder.colorIndex % AppColors.kFolderColors.length];
 
-          final colorIndex = folder.colorIndex % gradientPool.length;
-
-          int iconIndex = 0;
+          // Get icon based on iconName or fallback to colorIndex
+          IconData iconData = Icons.folder_rounded;
           if (folder.iconName != null && folder.iconName!.startsWith('icon_')) {
-            iconIndex = int.tryParse(folder.iconName!.split('_')[1]) ?? 0;
-            iconIndex = iconIndex % iconPool.length;
-          } else {
-            iconIndex = folder.colorIndex % iconPool.length;
+            final iconIdx = int.tryParse(folder.iconName!.split('_')[1]) ?? 0;
+            iconData = AppColors.kFolderIcons[iconIdx % AppColors.kFolderIcons.length];
           }
 
+          // Calculate notes count for this folder
+          final count = notes.where((note) => note.folderId == folder.id).length;
+          final countLabel = count == 1 ? '1 Note' : '$count Notes';
+
           return Padding(
-            padding: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.only(right: 16, bottom: 20),
             child: FolderCard(
               title: folder.name,
               notesCount: countLabel,
-              gradientColors: gradientPool[colorIndex],
-              icon: iconPool[iconIndex],
+              folderColor: color,
+              icon: iconData,
               onTap: () {
                 Navigator.push(
                   context,

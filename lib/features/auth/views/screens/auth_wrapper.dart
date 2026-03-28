@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:pop/core/utilities/sizes/size_config.dart';
 import 'package:pop/features/splash/views/screens/splash_screen.dart';
-import 'package:pop/features/home/views/screens/home_screen.dart';
+import 'package:pop/features/home/views/screens/luminous_main_screen.dart';
+
+import 'package:pop/features/auth/views/screens/app_lock_wrapper.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
@@ -21,7 +23,7 @@ class AuthWrapper extends StatelessWidget {
 
         final session = snapshot.data?.session;
         if (session != null) {
-          return const HomeScreen();
+          return const AppLockWrapper(child: LuminousMainScreen());
         } else {
           // If no session, show SplashScreen which leads to OnBoarding
           return const SplashScreen();

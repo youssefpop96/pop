@@ -14,6 +14,8 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:htmltopdfwidgets/htmltopdfwidgets.dart' as htw;
+import 'package:pop/core/utilities/styles/app_text_styles.dart';
 
 class NoteDetailScreen extends StatefulWidget {
   final NoteModel note;
@@ -75,28 +77,43 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           currentNote = updatedNote;
         }
 
-        return Scaffold(
-          backgroundColor: Colors.white,
-          appBar: _buildAppBar(context, currentNote),
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+        return Container(
+          decoration: const BoxDecoration(
+            color: AppColors.kBackground,
+            gradient: LinearGradient(
+              colors: [AppColors.kBackground, AppColors.kSurfaceLow],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: _buildAppBar(context, currentNote),
+            body: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              physics: const BouncingScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const SizedBox(height: 32),
                   _buildDateHeader(currentNote.createdAt),
+<<<<<<< Updated upstream
                   const SizedBox(height: 20),
                   _buildNoteContent(currentNote.title),
                   const SizedBox(height: 24),
+=======
+                  const SizedBox(height: 32),
+                  _buildNoteContent(currentNote.title, currentNote.content),
+                  const SizedBox(height: 64),
+>>>>>>> Stashed changes
                   _buildPhotosSection(context, currentNote),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 48),
                   _buildTagsSection(currentNote.tags),
-                  const SizedBox(height: 100),
+                  const SizedBox(height: 120),
                 ],
               ),
             ),
           ),
-          bottomSheet: _buildBottomMenuBar(),
         );
       },
     );
@@ -104,31 +121,33 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
   AppBar _buildAppBar(BuildContext context, NoteModel currentNote) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.black),
-        onPressed: () => Navigator.pop(context),
-      ),
-      title: const Text(
-        'Note Detail',
-        style: TextStyle(
-          color: Colors.black,
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
+      leading: Center(
+        child: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.kPrimary, size: 20),
+          onPressed: () => Navigator.pop(context),
         ),
+      ),
+      title: Text(
+        'THOUGHT',
+        style: AppTextStyles.headlineLg.copyWith(fontSize: 18, letterSpacing: 4, fontWeight: FontWeight.w900),
       ),
       centerTitle: true,
       actions: [
         IconButton(
+<<<<<<< Updated upstream
           icon: const Icon(
             Icons.picture_as_pdf_outlined,
             color: AppColors.kPrimaryColor,
           ),
+=======
+          icon: const Icon(Icons.picture_as_pdf_rounded, color: Colors.black45, size: 22),
+>>>>>>> Stashed changes
           onPressed: () => _exportToPdf(context, currentNote),
         ),
         IconButton(
-          icon: const Icon(Icons.edit_outlined, color: AppColors.kPrimaryColor),
+          icon: const Icon(Icons.edit_rounded, color: Colors.black45, size: 22),
           onPressed: () {
             Navigator.push(
               context,
@@ -139,9 +158,10 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           },
         ),
         IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+          icon: const Icon(Icons.delete_rounded, color: Colors.redAccent, size: 22),
           onPressed: () => _showDeleteDialog(context, currentNote),
         ),
+        const SizedBox(width: 8),
       ],
     );
   }
@@ -150,23 +170,45 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     showDialog(
       context: context,
       builder: (diagContext) => AlertDialog(
+<<<<<<< Updated upstream
         title: const Text('Delete Note'),
         content: const Text('Are you sure you want to delete this note?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(diagContext),
             child: const Text('Cancel'),
+=======
+        backgroundColor: Colors.white.withValues(alpha: 0.95),
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(36)),
+        title: Text('DELETE THOUGHT', style: AppTextStyles.headlineSm.copyWith(letterSpacing: 2, fontSize: 16)),
+        content: Text('ARE YOU SURE YOU WANT TO DELETE THIS THOUGHT? IT CANNOT BE UNDONE.', style: AppTextStyles.labelMd.copyWith(color: Colors.black45, fontSize: 12, height: 1.5)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(diagContext),
+            child: Text('CANCEL', style: AppTextStyles.labelMd.copyWith(color: Colors.black45, fontWeight: FontWeight.w900, letterSpacing: 1)),
+>>>>>>> Stashed changes
           ),
           TextButton(
             onPressed: () {
               context.read<NoteCubit>().deleteNote(currentNote.id);
               Navigator.pop(diagContext);
               Navigator.pop(context);
+<<<<<<< Updated upstream
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(const SnackBar(content: Text('Note deleted')));
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
+=======
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: const Text('THOUGHT DELETED'),
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: AppColors.kPrimary,
+              ));
+            },
+            child: Text('DELETE', style: AppTextStyles.labelMd.copyWith(color: Colors.redAccent, fontWeight: FontWeight.w900, letterSpacing: 1)),
+>>>>>>> Stashed changes
           ),
         ],
       ),
@@ -174,26 +216,24 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   }
 
   Widget _buildDateHeader(DateTime date) {
-    return Row(
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: AppColors.kGradientBlue.first,
-            shape: BoxShape.circle,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.kPrimary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.kPrimary.withValues(alpha: 0.2), width: 1.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.calendar_month_rounded, size: 16, color: AppColors.kPrimary),
+          const SizedBox(width: 12),
+          Text(
+            '${date.day}/${date.month}/${date.year}',
+            style: AppTextStyles.labelMd.copyWith(color: AppColors.kPrimary, fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 1),
           ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          '${date.day}/${date.month}/${date.year}',
-          style: const TextStyle(
-            color: Colors.black54,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -203,12 +243,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
+          style: AppTextStyles.headlineLg.copyWith(fontSize: 36, height: 1.2),
         ),
+<<<<<<< Updated upstream
         const SizedBox(height: 12),
         QuillEditor.basic(
           controller: _quillController,
@@ -218,6 +255,21 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
             padding: EdgeInsets.zero,
             showCursor: false,
           ),
+=======
+        const SizedBox(height: 32),
+        Html(
+          data: content,
+          style: {
+            "body": Style(
+              fontSize: FontSize(18),
+              color: Colors.black87,
+              margin: Margins.zero,
+              padding: HtmlPaddings.zero,
+              fontFamily: 'Outfit',
+              lineHeight: LineHeight.em(1.6),
+            ),
+          },
+>>>>>>> Stashed changes
         ),
       ],
     );
@@ -226,15 +278,21 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   Future<void> _exportToPdf(BuildContext context, NoteModel note) async {
     try {
       final doc = pw.Document();
+<<<<<<< Updated upstream
 
       // Extract plain text for simple PDF version
       // In a real app, you might want to map Quill attributes to PDF widgets
       final plainText = _quillController.document.toPlainText();
 
+=======
+      final widgets = await htw.HTMLToPdf().convert(note.content);
+      
+>>>>>>> Stashed changes
       doc.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           build: (context) => [
+<<<<<<< Updated upstream
             pw.Header(
               level: 0,
               child: pw.Text(
@@ -250,18 +308,25 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               text: plainText,
               style: const pw.TextStyle(fontSize: 14),
             ),
+=======
+            pw.Header(level: 0, child: pw.Text(note.title, style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold))),
+            pw.Divider(),
+            ...widgets,
+>>>>>>> Stashed changes
           ],
         ),
       );
 
-      await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => doc.save(),
-      );
+      await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => doc.save());
     } catch (e) {
       if (context.mounted) {
+<<<<<<< Updated upstream
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Failed to generate PDF: $e')));
+=======
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to generate PDF: $e')));
+>>>>>>> Stashed changes
       }
     }
   }
@@ -270,29 +335,21 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Photos',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
-        const SizedBox(height: 12),
+        Text('PHOTOS', style: AppTextStyles.labelMd.copyWith(letterSpacing: 2, color: Colors.black26, fontSize: 10, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 16),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
           child: Row(
             children: [
               if (currentNote.images.isEmpty && !isAddingImage)
-                const Text(
-                  'No photos added yet',
-                  style: TextStyle(color: Colors.black38),
-                ),
+                Text('NO PHOTOS ATTACHED', style: AppTextStyles.labelMd.copyWith(color: Colors.black26, fontSize: 10, letterSpacing: 1)),
               ...currentNote.images.asMap().entries.map((entry) {
                 final int idx = entry.key;
                 final String img = entry.value;
                 return GestureDetector(
                   onTap: () {
+<<<<<<< Updated upstream
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -302,20 +359,21 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                         ),
                       ),
                     );
+=======
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => FullScreenImageViewer(imageUrl: img, tag: 'note_${currentNote.id}_img_$idx')));
+>>>>>>> Stashed changes
                   },
                   child: Hero(
                     tag: 'note_${currentNote.id}_img_$idx',
                     child: Container(
-                      height: 70,
-                      width: 70,
-                      margin: const EdgeInsets.only(right: 12),
+                      height: 120,
+                      width: 120,
+                      margin: const EdgeInsets.only(right: 16),
                       decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(16),
-                        image: DecorationImage(
-                          image: NetworkImage(img),
-                          fit: BoxFit.cover,
-                        ),
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 15, offset: const Offset(0, 8))],
+                        image: DecorationImage(image: NetworkImage(img), fit: BoxFit.cover),
                       ),
                     ),
                   ),
@@ -323,27 +381,23 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               }),
               if (isAddingImage)
                 Container(
-                  height: 70,
-                  width: 70,
-                  margin: const EdgeInsets.only(right: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
+                  height: 120,
+                  width: 120,
+                  margin: const EdgeInsets.only(right: 16),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(28)),
+                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.kPrimary)),
                 ),
               GestureDetector(
                 onTap: isAddingImage ? null : () => _onAddImage(currentNote),
                 child: Container(
-                  height: 70,
-                  width: 70,
+                  height: 120,
+                  width: 120,
                   decoration: BoxDecoration(
-                    color: AppColors.kOnboardingPeach,
-                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.white.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5, style: BorderStyle.solid),
                   ),
-                  child: const Icon(Icons.add, color: Colors.orange, size: 30),
+                  child: Icon(Icons.add_a_photo_rounded, color: AppColors.kPrimary, size: 32),
                 ),
               ),
             ],
@@ -364,6 +418,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         final url = await cubit.uploadImage(File(image.path));
         final updatedImages = List<String>.from(currentNote.images)..add(url);
         await cubit.updateNote(currentNote.copyWith(images: updatedImages));
+<<<<<<< Updated upstream
         if (mounted) {
           ScaffoldMessenger.of(
             context,
@@ -375,10 +430,12 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
             context,
           ).showSnackBar(SnackBar(content: Text('Failed to add image: $e')));
         }
+=======
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to add image: $e')));
+>>>>>>> Stashed changes
       } finally {
-        if (mounted) {
-          setState(() => isAddingImage = false);
-        }
+        if (mounted) setState(() => isAddingImage = false);
       }
     }
   }
@@ -388,50 +445,18 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Tags',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
-        const SizedBox(height: 12),
+        Text('TAGS', style: AppTextStyles.labelMd.copyWith(letterSpacing: 2, color: Colors.black26, fontSize: 10, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 16),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: tags
-              .map(
-                (tag) => TagChip(
-                  label: tag,
-                  backgroundColor: AppColors.kGradientBlue.first.withValues(
-                    alpha: 0.1,
-                  ),
-                  textColor: AppColors.kGradientBlue.first,
-                ),
-              )
-              .toList(),
+          spacing: 12,
+          runSpacing: 12,
+          children: tags.map((tag) => TagChip(
+            label: tag,
+            backgroundColor: Colors.white.withValues(alpha: 0.6),
+            textColor: AppColors.kPrimary,
+          )).toList(),
         ),
       ],
-    );
-  }
-
-  Widget _buildBottomMenuBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey[200]!)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: const [
-          Icon(Icons.home_outlined, color: Colors.black54),
-          Icon(Icons.star_border, color: Colors.black54),
-          Icon(Icons.shopping_bag_outlined, color: Colors.black54),
-          Icon(Icons.folder_outlined, color: Colors.black54),
-        ],
-      ),
     );
   }
 }

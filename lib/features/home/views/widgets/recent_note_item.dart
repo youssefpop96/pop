@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pop/core/utilities/styles/app_text_styles.dart';
 
 class RecentNoteItem extends StatelessWidget {
   final String title;
@@ -21,68 +22,72 @@ class RecentNoteItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: 20),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: Colors.white.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 1.5),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
         child: Row(
           children: [
             Container(
-              width: 4,
-              height: 48,
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
+                color: indicatorColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.description_rounded,
                 color: indicatorColor,
-                borderRadius: BorderRadius.circular(10),
+                size: 20,
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 20),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
-                    style: const TextStyle(
+                    title.toUpperCase(),
+                    style: AppTextStyles.headlineSm.copyWith(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      letterSpacing: 0.5,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(Icons.folder, color: indicatorColor, size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        folderName,
-                        style: const TextStyle(
-                          color: Colors.black54,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    folderName.toUpperCase(),
+                    style: AppTextStyles.labelMd.copyWith(
+                      color: Colors.black38,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Icon(Icons.more_vert, color: Colors.black38, size: 20),
-                const SizedBox(height: 8),
+                const Icon(Icons.arrow_forward_ios_rounded, color: Colors.black12, size: 14),
+                const SizedBox(height: 12),
                 Text(
-                  time,
-                  style: const TextStyle(color: Colors.black38, fontSize: 12),
+                  time.toUpperCase(),
+                  style: AppTextStyles.labelMd.copyWith(
+                    color: Colors.black26,
+                    fontSize: 10,
+                  ),
                 ),
               ],
             ),

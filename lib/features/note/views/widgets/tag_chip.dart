@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pop/core/utilities/styles/app_text_styles.dart';
 
 class TagChip extends StatelessWidget {
   final String label;
@@ -21,26 +22,27 @@ class TagChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(color: textColor.withValues(alpha: 0.1), width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              label,
-              style: TextStyle(
+              label.toUpperCase(),
+              style: AppTextStyles.labelMd.copyWith(
                 color: textColor,
+                fontSize: 10,
                 fontWeight: FontWeight.bold,
-                fontSize: 14,
+                letterSpacing: 0.5,
               ),
             ),
             if (icon != null) ...[
-              const SizedBox(width: 4),
-              Icon(icon, color: textColor, size: 16),
+              const SizedBox(width: 6),
+              Icon(icon, color: textColor, size: 14),
             ],
           ],
         ),

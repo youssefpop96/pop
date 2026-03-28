@@ -20,7 +20,7 @@ class SignInScreen extends StatelessWidget {
     return BlocProvider(
       create: (context) => SignInCubit(context.read<AuthRepository>()),
       child: const Scaffold(
-        backgroundColor: AppColors.kPrimaryColor,
+        backgroundColor: Colors.transparent,
         body: _SignInBody(),
       ),
     );
@@ -35,17 +35,21 @@ class _SignInBody extends StatelessWidget {
     return BlocConsumer<SignInCubit, SignInState>(
       listener: (context, state) {
         if (state is SignInSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Welcome! Sign in successful.')),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: const Text('WELCOME BACK!'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.kPrimary,
+          ));
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const HomeScreen()),
           );
         } else if (state is SignInFailure) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.errMessage)));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(state.errMessage.toUpperCase()),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.redAccent,
+          ));
         }
       },
       builder: (context, state) {
@@ -54,12 +58,13 @@ class _SignInBody extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(context),
-              const SizedBox(height: 40),
+              const SizedBox(height: 48),
               _buildForm(context, state),
-              const SizedBox(height: 30),
+              const SizedBox(height: 40),
               _buildDivider(),
-              const SizedBox(height: 30),
+              const SizedBox(height: 32),
               _buildSocialLogin(context),
+              const SizedBox(height: 40),
             ],
           ),
         );
@@ -68,47 +73,43 @@ class _SignInBody extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Row(
-            children: [
-              const Icon(Icons.waving_hand, color: Color(0xFFFFD700), size: 28),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
-                      'Welcome Back!',
-                      style: AppTextStyles.title28Black87Bold,
-                    ),
-                    Text(
-                      'Login to continue your journey',
-                      style: AppTextStyles.title16GreyW500,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+        Text(
+          'WELCOME BACK',
+          style: AppTextStyles.headlineLg.copyWith(
+            fontSize: 28,
+            letterSpacing: 2,
+            fontWeight: FontWeight.w900,
           ),
         ),
-        TextButton(
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const SignUpScreen()),
-            );
-          },
-          child: const Text(
-            'Get Started',
-            style: TextStyle(
-              color: Colors.black54,
-              fontWeight: FontWeight.bold,
-              decoration: TextDecoration.underline,
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Text(
+              "DON'T HAVE AN ACCOUNT? ",
+              style: AppTextStyles.labelMd.copyWith(
+                color: Colors.black38,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
+            GestureDetector(
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                );
+              },
+              child: Text(
+                'GET STARTED',
+                style: AppTextStyles.labelMd.copyWith(
+                  color: AppColors.kPrimary,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -125,24 +126,22 @@ class _SignInBody extends StatelessWidget {
             keyboardType: TextInputType.emailAddress,
             onChanged: (val) => cubit.email = val,
             validator: (val) =>
-                val == null || val.isEmpty ? 'Required field' : null,
+                val == null || val.isEmpty ? 'REQUIRED FIELD' : null,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           CustomTextFormField(
             hintText: 'Password',
             obscureText: true,
             onChanged: (val) => cubit.password = val,
             validator: (val) =>
-                val == null || val.isEmpty ? 'Required field' : null,
-            suffixIcon: IconButton(
-              icon: const Icon(
-                Icons.visibility_off_outlined,
-                color: Colors.black26,
-              ),
-              onPressed: () {},
+                val == null || val.isEmpty ? 'REQUIRED FIELD' : null,
+            suffixIcon: const Icon(
+              Icons.lock_outline_rounded,
+              color: Colors.black12,
+              size: 20,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           Align(
             alignment: Alignment.centerRight,
             child: GestureDetector(
@@ -154,20 +153,22 @@ class _SignInBody extends StatelessWidget {
                   ),
                 );
               },
-              child: const Text(
-                'Forgot password?',
-                style: TextStyle(color: Colors.black45, fontSize: 13),
+              child: Text(
+                'FORGOT PASSWORD?',
+                style: AppTextStyles.labelMd.copyWith(
+                  color: Colors.black26,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 48),
           state is SignInLoading
               ? const CircularProgressIndicator()
               : CustomElevatedButton(
                   text: 'Sign in',
-                  onPressed: () {
-                    cubit.signIn();
-                  },
+                  onPressed: () => cubit.signIn(),
                 ),
         ],
       ),
@@ -176,16 +177,21 @@ class _SignInBody extends StatelessWidget {
 
   Widget _buildDivider() {
     return Row(
-      children: const [
-        Expanded(child: Divider()),
+      children: [
+        Expanded(child: Divider(color: Colors.black.withValues(alpha: 0.05))),
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            'Or sign in with',
-            style: TextStyle(color: Colors.black26),
+            'OR CONTINUE WITH',
+            style: AppTextStyles.labelMd.copyWith(
+              color: Colors.black26,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1,
+            ),
           ),
         ),
-        Expanded(child: Divider()),
+        Expanded(child: Divider(color: Colors.black.withValues(alpha: 0.05))),
       ],
     );
   }
@@ -196,11 +202,9 @@ class _SignInBody extends StatelessWidget {
         SocialLoginButton(
           label: 'Google',
           iconPath: 'assets/google.jpg',
-          onTap: () {
-            context.read<SignInCubit>().signInWithGoogle();
-          },
+          onTap: () => context.read<SignInCubit>().signInWithGoogle(),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: 20),
         SocialLoginButton(
           label: 'Facebook',
           iconPath: 'assets/facebook.jpg',

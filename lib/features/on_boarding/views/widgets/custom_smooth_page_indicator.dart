@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pop/core/utilities/styles/app_colors.dart';
 
 class CustomSmoothPageIndicator extends StatelessWidget {
   final int itemCount;
@@ -13,21 +14,20 @@ class CustomSmoothPageIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      top: 60,
+      bottom: 60,
       left: 32,
-      right: 32,
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: List.generate(itemCount, (index) {
-          return Expanded(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 2),
-              height: 2,
-              decoration: BoxDecoration(
-                color: index == currentPage
-                    ? Colors.black
-                    : Colors.black.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(1),
-              ),
+          final isCurrent = index == currentPage;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            height: 6,
+            width: isCurrent ? 24 : 6,
+            decoration: BoxDecoration(
+              color: isCurrent ? AppColors.kPrimary : Colors.black12,
+              borderRadius: BorderRadius.circular(100),
             ),
           );
         }),
