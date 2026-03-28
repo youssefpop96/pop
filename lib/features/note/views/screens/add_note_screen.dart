@@ -9,7 +9,7 @@ import 'package:pop/features/note/view_models/cubit/note_state.dart';
 import 'package:pop/core/models/folder_model.dart';
 import 'package:pop/core/models/note_model.dart';
 import 'package:pop/features/note/views/widgets/tag_chip.dart';
-import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter_quill/flutter_quill.dart';
 
 class AddNoteScreen extends StatefulWidget {
   final String? initialFolderId;
@@ -23,7 +23,7 @@ class AddNoteScreen extends StatefulWidget {
 class _AddNoteScreenState extends State<AddNoteScreen> {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController tagController = TextEditingController();
-  late quill.QuillController _controller;
+  late QuillController _controller;
   final ScrollController _scrollController = ScrollController();
 
   String? selectedFolderId;
@@ -50,18 +50,18 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
     if (widget.existingNote != null &&
         widget.existingNote!.content.isNotEmpty) {
       try {
-        final doc = quill.Document.fromJson(
+        final doc = Document.fromJson(
           jsonDecode(widget.existingNote!.content),
         );
-        _controller = quill.QuillController(
+        _controller = QuillController(
           document: doc,
           selection: const TextSelection.collapsed(offset: 0),
         );
       } catch (e) {
-        _controller = quill.QuillController.basic();
+        _controller = QuillController.basic();
       }
     } else {
-      _controller = quill.QuillController.basic();
+      _controller = QuillController.basic();
     }
   }
 
@@ -233,6 +233,8 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                       label: t,
                       onTap: () => setState(() => tags.remove(t)),
                       icon: Icons.close,
+                      backgroundColor: AppColors.kPrimaryColor.withOpacity(0.1),
+                      textColor: AppColors.kPrimaryColor,
                     ),
                   )
                   .toList(),
@@ -265,9 +267,9 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
         child: index == 0
             ? Padding(
                 padding: const EdgeInsets.all(45),
-                child: quill.QuillEditor.basic(
+                child: QuillEditor.basic(
                   controller: _controller,
-                  configurations: const quill.QuillEditorConfigurations(
+                  configurations: const QuillEditorConfigurations(
                     placeholder: 'Start writing your document...',
                     expands: true,
                   ),
@@ -343,9 +345,9 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   Widget _buildToolbar() {
     return Container(
       color: Colors.white,
-      child: quill.QuillSimpleToolbar(
-        controller: _controller,
-        configurations: const quill.QuillSimpleToolbarConfigurations(
+      child: QuillToolbar.simple(
+        configurations: QuillSimpleToolbarConfigurations(
+          controller: _controller,
           showSearchButton: false,
           showFontSize: true,
           multiRowsDisplay: false,

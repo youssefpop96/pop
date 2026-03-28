@@ -10,7 +10,7 @@ import 'package:pop/features/note/view_models/cubit/note_cubit.dart';
 import 'package:pop/features/note/view_models/cubit/note_state.dart';
 import 'package:pop/features/note/views/screens/add_note_screen.dart';
 import 'package:pop/core/components/full_screen_image_viewer.dart';
-import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -25,7 +25,7 @@ class NoteDetailScreen extends StatefulWidget {
 
 class _NoteDetailScreenState extends State<NoteDetailScreen> {
   bool isAddingImage = false;
-  late quill.QuillController _quillController;
+  late QuillController _quillController;
 
   @override
   void initState() {
@@ -36,22 +36,20 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   void _initQuillController(String content) {
     if (content.isNotEmpty) {
       try {
-        final doc = quill.Document.fromJson(jsonDecode(content));
-        _quillController = quill.QuillController(
+        final doc = Document.fromJson(jsonDecode(content));
+        _quillController = QuillController(
           document: doc,
           selection: const TextSelection.collapsed(offset: 0),
-          readOnly: true,
         );
       } catch (e) {
         // Fallback for non-JSON content
-        _quillController = quill.QuillController(
-          document: quill.Document()..insert(0, content),
+        _quillController = QuillController(
+          document: Document()..insert(0, content),
           selection: const TextSelection.collapsed(offset: 0),
-          readOnly: true,
         );
       }
     } else {
-      _quillController = quill.QuillController.basic(readOnly: true);
+      _quillController = QuillController.basic();
     }
   }
 
@@ -212,9 +210,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        quill.QuillEditor.basic(
+        QuillEditor.basic(
           controller: _quillController,
-          configurations: const quill.QuillEditorConfigurations(
+          configurations: const QuillEditorConfigurations(
             readOnly: true,
             expands: false,
             padding: EdgeInsets.zero,
