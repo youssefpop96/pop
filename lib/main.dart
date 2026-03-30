@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
           ],
           theme: ThemeData(
             useMaterial3: true,
-            fontFamily: 'Roboto',
+            fontFamily: 'Inter',
             scaffoldBackgroundColor: Colors.white,
           ),
           home: const AuthWrapper(),

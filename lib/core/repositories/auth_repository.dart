@@ -27,6 +27,22 @@ class AuthRepository {
     );
   }
 
+  Future<UserResponse> updateFullName(String fullName) async {
+    return await _supabase.auth.updateUser(
+      UserAttributes(
+        data: {'full_name': fullName},
+      ),
+    );
+  }
+
+  Future<UserResponse> updatePassword(String newPassword) async {
+    return await _supabase.auth.updateUser(
+      UserAttributes(
+        password: newPassword,
+      ),
+    );
+  }
+
   Future<AuthResponse> signInWithGoogle() async {
     final GoogleSignIn googleSignIn = GoogleSignIn(
       serverClientId: SupabaseCredentials.googleWebClientId,

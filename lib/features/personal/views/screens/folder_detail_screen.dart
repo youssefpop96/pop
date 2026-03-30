@@ -8,6 +8,7 @@ import 'package:pop/features/note/views/screens/add_note_screen.dart';
 import 'package:pop/features/note/views/screens/note_detail_screen.dart';
 import 'package:pop/features/note/view_models/cubit/note_cubit.dart';
 import 'package:pop/features/note/view_models/cubit/note_state.dart';
+import 'package:pop/features/home/views/screens/add_folder_screen.dart';
 
 class FolderDetailScreen extends StatefulWidget {
   final FolderModel folder;
@@ -26,74 +27,68 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Map the colors based on index for consistency
-    List<List<Color>> gradientPool = [
-      AppColors.kGradientBlue,
-      AppColors.kGradientGreen,
-      AppColors.kGradientPurple,
-      AppColors.kGradientOrange,
-    ];
-    final gradient =
-        gradientPool[widget.folder.colorIndex % gradientPool.length];
+    return BlocBuilder<NoteCubit, NoteState>(
+      builder: (context, state) {
+        // Find the latest folder data from state if available
+        FolderModel currentFolder = widget.folder;
+        List<NoteModel> notes = [];
+        
+        if (state is NoteSuccess) {
+          try {
+            currentFolder = state.folders.firstWhere((f) => f.id == widget.folder.id);
+          } catch (_) {}
+          notes = state.folderNotes ?? [];
+        }
 
-    return Scaffold(
-      backgroundColor: AppColors.kLightGreyColor,
-      appBar: _buildAppBar(context, gradient.first),
-      body: BlocBuilder<NoteCubit, NoteState>(
-        builder: (context, state) {
-          if (state is NoteLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        final colorIndex = currentFolder.colorIndex % AppColors.kFolderGradients.length;
+        final gradient = AppColors.kFolderGradients[colorIndex];
+        final icon = AppColors.kFolderIcons[colorIndex];
 
-          List<NoteModel> notes = [];
-          if (state is NoteSuccess) {
-            notes = state.folderNotes ?? [];
-          }
-
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildHeaderCard(gradient, notes.length),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 24,
-                  ),
-                  child: notes.isEmpty
-                      ? const Center(child: Text('No notes in this folder.'))
-                      : Column(
-                          children: notes
-                              .map(
-                                (note) => NoteCard(
-                                  title: note.title,
-                                  subtitle: note.content,
-                                  timeText:
-                                      '${note.createdAt.day}/${note.createdAt.month}',
-                                  indicatorColor: gradient.first,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            NoteDetailScreen(note: note),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              )
-                              .toList(),
-                        ),
+        return Scaffold(
+          backgroundColor: AppColors.kLightGreyColor,
+          appBar: _buildAppBar(context, gradient.first, currentFolder),
+          body: state is NoteLoading 
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: [
+                    _buildHeaderCard(gradient, icon, currentFolder, notes.length),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                      child: notes.isEmpty
+                          ? const Center(child: Text('No notes in this folder.'))
+                          : Column(
+                              children: notes
+                                  .map(
+                                    (note) => NoteCard(
+                                      title: note.title,
+                                      subtitle: note.content,
+                                      timeText: '${note.createdAt.day}/${note.createdAt.month}',
+                                      indicatorColor: gradient.first,
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => NoteDetailScreen(note: note),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          );
-        },
-      ),
-      floatingActionButton: _buildFloatingAddButton(context, gradient.first),
+              ),
+          floatingActionButton: _buildFloatingAddButton(context, gradient.first, currentFolder),
+        );
+      },
     );
   }
 
-  AppBar _buildAppBar(BuildContext context, Color themeColor) {
+  AppBar _buildAppBar(BuildContext context, Color themeColor, FolderModel folder) {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -102,7 +97,7 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
         onPressed: () => Navigator.pop(context),
       ),
       title: Text(
-        widget.folder.name,
+        folder.name,
         style: TextStyle(
           color: themeColor,
           fontSize: 22,
@@ -111,15 +106,30 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
       ),
       centerTitle: true,
       actions: [
-        IconButton(
+        PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, color: Colors.black),
-          onPressed: () {},
+          onSelected: (value) {
+            if (value == 'edit') {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddFolderScreen(folderToEdit: folder),
+                ),
+              );
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'edit',
+              child: Text('Edit Folder'),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildHeaderCard(List<Color> gradient, int count) {
+  Widget _buildHeaderCard(List<Color> gradient, IconData icon, FolderModel folder, int count) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
@@ -146,8 +156,8 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(
-                    Icons.folder,
+                  child: Icon(
+                    icon,
                     color: Colors.white,
                     size: 32,
                   ),
@@ -157,7 +167,7 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.folder.name,
+                      folder.name,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 24,
@@ -184,8 +194,7 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        AddNoteScreen(initialFolderId: widget.folder.id),
+                    builder: (context) => AddNoteScreen(initialFolderId: folder.id),
                   ),
                 );
               },
@@ -211,7 +220,7 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
     );
   }
 
-  Widget _buildFloatingAddButton(BuildContext context, Color themeColor) {
+  Widget _buildFloatingAddButton(BuildContext context, Color themeColor, FolderModel folder) {
     return Container(
       decoration: BoxDecoration(
         color: themeColor,
@@ -230,8 +239,7 @@ class _FolderDetailScreenState extends State<FolderDetailScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  AddNoteScreen(initialFolderId: widget.folder.id),
+              builder: (context) => AddNoteScreen(initialFolderId: folder.id),
             ),
           );
         },

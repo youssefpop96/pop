@@ -33,10 +33,10 @@ class NoteCubit extends Cubit<NoteState> {
 
   Future<void> _ensureDefaultFoldersExist() async {
     final defaultFolders = [
-      {'name': 'Personal', 'color_index': 0, 'icon_name': 'person'},
-      {'name': 'Work', 'color_index': 1, 'icon_name': 'work'},
-      {'name': 'Study', 'color_index': 2, 'icon_name': 'school'},
-      {'name': 'Ideas', 'color_index': 3, 'icon_name': 'lightbulb'},
+      {'name': 'Personal', 'color_index': 0, 'icon_name': 'icon_0'},
+      {'name': 'Work', 'color_index': 1, 'icon_name': 'icon_1'},
+      {'name': 'Study', 'color_index': 2, 'icon_name': 'icon_2'},
+      {'name': 'Ideas', 'color_index': 3, 'icon_name': 'icon_4'},
     ];
 
     for (var f in defaultFolders) {
@@ -72,7 +72,7 @@ class NoteCubit extends Cubit<NoteState> {
 
   Future<void> addNote({
     required String title,
-    required String content,
+    required dynamic content,
     required String folderId,
     List<String> tags = const [],
     List<String> images = const [],
@@ -137,13 +137,30 @@ class NoteCubit extends Cubit<NoteState> {
     }
   }
 
+  Future<void> updateFolder(FolderModel folder) async {
+    try {
+      await _repository.updateFolder(folder);
+      await fetchHomeData();
+    } catch (e) {
+      emit(NoteFailure(errMessage: e.toString()));
+    }
+  }
+
+  Future<void> deleteFolder(String folderId) async {
+    try {
+      await _repository.deleteFolder(folderId);
+      await fetchHomeData();
+    } catch (e) {
+      emit(NoteFailure(errMessage: e.toString()));
+    }
+  }
+
   void searchNotes(String query) {
     if (query.isEmpty) {
       emit(NoteSuccess(folders: _folders, recentNotes: _recentNotes));
     } else {
       final filtered = _recentNotes.where((note) {
-        return note.title.toLowerCase().contains(query.toLowerCase()) ||
-            note.content.toLowerCase().contains(query.toLowerCase());
+        return note.title.toLowerCase().contains(query.toLowerCase());
       }).toList();
       emit(NoteSuccess(folders: _folders, recentNotes: filtered));
     }

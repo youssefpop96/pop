@@ -35,6 +35,16 @@ class NotesRepository {
     await _dbService.createFolder(folder);
   }
 
+  /// Updates an existing folder.
+  Future<void> updateFolder(FolderModel folder) async {
+    await _dbService.updateFolder(folder.id, folder.toJson());
+  }
+
+  /// Deletes a specific folder.
+  Future<void> deleteFolder(String folderId) async {
+    await _dbService.deleteFolder(folderId);
+  }
+
   /// Deletes a specific note by its [id].
   Future<void> deleteNote(String id) async {
     await _dbService.deleteNote(id);

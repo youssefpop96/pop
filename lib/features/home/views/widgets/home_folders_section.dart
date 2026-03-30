@@ -19,26 +19,8 @@ class HomeFoldersSection extends StatelessWidget {
   Widget build(BuildContext context) {
     if (folders.isEmpty) return const SizedBox();
 
-    final List<List<Color>> gradientPool = [
-      AppColors.kGradientBlue,
-      AppColors.kGradientGreen,
-      AppColors.kGradientPurple,
-      AppColors.kGradientOrange,
-      AppColors.kGradientPink,
-      AppColors.kGradientTeal,
-    ];
-
-    final List<IconData> iconPool = [
-      Icons.folder,
-      Icons.business_center,
-      Icons.videocam,
-      Icons.home,
-      Icons.description,
-      Icons.stars,
-    ];
-
     return SizedBox(
-      height: 110,
+      height: 140,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: folders.length,
@@ -52,14 +34,14 @@ class HomeFoldersSection extends StatelessWidget {
               .length;
           final countLabel = count == 1 ? '1 Note' : '$count Notes';
 
-          final colorIndex = folder.colorIndex % gradientPool.length;
+          final colorIndex = folder.colorIndex % AppColors.kFolderGradients.length;
 
           int iconIndex = 0;
           if (folder.iconName != null && folder.iconName!.startsWith('icon_')) {
             iconIndex = int.tryParse(folder.iconName!.split('_')[1]) ?? 0;
-            iconIndex = iconIndex % iconPool.length;
+            iconIndex = iconIndex % AppColors.kFolderIcons.length;
           } else {
-            iconIndex = folder.colorIndex % iconPool.length;
+            iconIndex = folder.colorIndex % AppColors.kFolderIcons.length;
           }
 
           return Padding(
@@ -67,8 +49,8 @@ class HomeFoldersSection extends StatelessWidget {
             child: FolderCard(
               title: folder.name,
               notesCount: countLabel,
-              gradientColors: gradientPool[colorIndex],
-              icon: iconPool[iconIndex],
+              gradientColors: AppColors.kFolderGradients[colorIndex],
+              icon: AppColors.kFolderIcons[iconIndex],
               onTap: () {
                 Navigator.push(
                   context,

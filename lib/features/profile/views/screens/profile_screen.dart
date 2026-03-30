@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:pop/core/utilities/styles/app_colors.dart';
+import 'package:pop/core/repositories/auth_repository.dart';
 import 'package:pop/features/splash/views/screens/splash_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final _supabase = Supabase.instance.client;
+
+  @override
   Widget build(BuildContext context) {
-    final user = Supabase.instance.client.auth.currentUser;
+    final user = _supabase.auth.currentUser;
     final String email = user?.email ?? 'No email available';
     final String name = user?.userMetadata?['full_name'] ?? user?.userMetadata?['name'] ?? 'Guest User';
 
@@ -42,12 +51,12 @@ class ProfileScreen extends StatelessWidget {
             _buildSettingsItem(
               icon: Icons.person_outline,
               title: 'Edit Name',
-              onTap: () {},
+              onTap: () => _showEditNameDialog(context, name),
             ),
             _buildSettingsItem(
               icon: Icons.lock_outline,
               title: 'Change Password',
-              onTap: () {},
+              onTap: () => _showChangePasswordDialog(context),
             ),
             _buildSettingsItem(
               icon: Icons.notifications_none,
@@ -68,7 +77,82 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  void _showEditNameDialog(BuildContext context, String currentName) {
+    final controller = TextEditingController(text: currentName);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Name'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: "Enter your full name"),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              final newName = controller.text.trim();
+              if (newName.isNotEmpty) {
+                try {
+                  await context.read<AuthRepository>().updateFullName(newName);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    setState(() {});
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Name updated successfully!')));
+                  }
+                } catch (e) {
+                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                }
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showChangePasswordDialog(BuildContext context) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Change Password'),
+        content: TextField(
+          controller: controller,
+          obscureText: true,
+          decoration: const InputDecoration(hintText: "Enter new password"),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              final newPass = controller.text.trim();
+              if (newPass.length >= 6) {
+                try {
+                  await context.read<AuthRepository>().updatePassword(newPass);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password updated successfully!')));
+                  }
+                } catch (e) {
+                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password must be at least 6 characters')));
+              }
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildProfileHeader(String name, String email) {
+    final user = _supabase.auth.currentUser;
+    final profileUrl = user?.userMetadata?['avatar_url'];
+
     return Column(
       children: [
         Stack(
@@ -79,7 +163,7 @@ class ProfileScreen extends StatelessWidget {
               height: 120,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: LinearGradient(
+                gradient: const LinearGradient(
                   colors: AppColors.kGradientBlue,
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -92,8 +176,13 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Center(
-                child: Icon(Icons.person, size: 60, color: Colors.white),
+              child: Center(
+                child: profileUrl != null 
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(60),
+                      child: Image.network(profileUrl, width: 120, height: 120, fit: BoxFit.cover),
+                    )
+                  : const Icon(Icons.person, size: 60, color: Colors.white),
               ),
             ),
             Container(

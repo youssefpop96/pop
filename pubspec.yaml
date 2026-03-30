@@ -19,7 +19,6 @@ dependencies:
   printing: ^5.14.3
   flutter_localizations:
     sdk: flutter
-  html_editor_enhanced: ^2.7.1
   flutter_html: ^3.0.0
   flutter_quill: ^11.5.0
 

@@ -32,6 +32,15 @@ class DatabaseService {
     await _supabase.from('folders').insert(data);
   }
 
+  Future<void> updateFolder(String folderId, Map<String, dynamic> updates) async {
+    await _supabase.from('folders').update(updates).eq('id', folderId);
+  }
+
+  Future<void> deleteFolder(String folderId) async {
+    // Note: In Supabase, you might want to handle what happens to notes in this folder (cascade delete or move to general)
+    await _supabase.from('folders').delete().eq('id', folderId);
+  }
+
   // --- Notes ---
 
   Future<List<NoteModel>> getNotes({String? folderId}) async {

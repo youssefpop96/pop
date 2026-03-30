@@ -3,7 +3,7 @@ class NoteModel {
   final String userId;
   final String folderId;
   final String title;
-  final String content;
+  final dynamic content; 
   final List<String> tags;
   final List<String> images;
   final DateTime createdAt;
@@ -25,7 +25,7 @@ class NoteModel {
       userId: json['user_id'],
       folderId: json['folder_id'].toString(),
       title: json['title'],
-      content: json['content'],
+      content: json['content'], 
       tags: List<String>.from(json['tags'] ?? []),
       images: List<String>.from(json['images'] ?? []),
       createdAt: DateTime.parse(json['created_at']),
@@ -37,7 +37,7 @@ class NoteModel {
       'user_id': userId,
       'folder_id': folderId,
       'title': title,
-      'content': content,
+      'content': content, 
       'tags': tags,
       'images': images,
     };
@@ -48,7 +48,7 @@ class NoteModel {
     String? userId,
     String? folderId,
     String? title,
-    String? content,
+    dynamic content,
     List<String>? tags,
     List<String>? images,
     DateTime? createdAt,

@@ -2,6 +2,29 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
 class AppTextStyles {
+  static const TextStyle headlineLg = TextStyle(
+    fontSize: 32,
+    fontWeight: FontWeight.bold,
+    color: Colors.black,
+  );
+
+  static const TextStyle headlineSm = TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.bold,
+    color: Colors.black,
+  );
+
+  static const TextStyle labelMd = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    color: Colors.black,
+  );
+
+  static const TextStyle bodyMd = TextStyle(
+    fontSize: 16,
+    color: Colors.black87,
+  );
+
   static const TextStyle title64Black900 = TextStyle(
     fontSize: 64,
     fontWeight: FontWeight.w900,
