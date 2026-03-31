@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pop/core/utilities/styles/app_colors.dart';
 import 'package:pop/features/note/view_models/cubit/note_cubit.dart';
@@ -53,29 +51,6 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() => isUploading = true);
-      try {
-        if (!mounted) return;
-        final cubit = context.read<NoteCubit>();
-        final url = await cubit.uploadImage(File(image.path));
-        if (mounted) {
-          setState(() {
-            imageUrls.add(url);
-            isUploading = false;
-          });
-        }
-      } catch (e) {
-        if (mounted) {
-          setState(() => isUploading = false);
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
-        }
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

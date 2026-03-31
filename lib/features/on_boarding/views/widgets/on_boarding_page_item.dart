@@ -1,71 +1,102 @@
 import 'package:flutter/material.dart';
 import '../../models/on_boarding_model.dart';
 import '../../../../core/utilities/styles/app_text_styles.dart';
-import 'next_page_button.dart';
+import '../../../../core/utilities/styles/app_colors.dart';
 
 class OnboardingPageItem extends StatelessWidget {
   final OnboardingModel item;
+  final VoidCallback? onSkip;
 
-  const OnboardingPageItem({super.key, required this.item});
+  const OnboardingPageItem({super.key, required this.item, this.onSkip});
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    
     return Container(
-      color: item.bgColor,
+      decoration: const BoxDecoration(
+        color: AppColors.kBackground,
+        gradient: LinearGradient(
+          colors: [Color(0xFFE0F7FA), Color(0xFFE8EAF6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 100),
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: 1.0),
-            duration: const Duration(milliseconds: 800),
-            builder: (context, value, child) {
-              return Opacity(
-                opacity: value,
-                child: Transform.translate(
-                  offset: Offset(0, 20 * (1 - value)),
-                  child: child,
+          const SizedBox(height: 60),
+          // Header Logo & Skip
+          Row(
+            children: [
+              const Icon(Icons.edit_note_rounded, color: Color(0xFF00E5FF), size: 28),
+              const SizedBox(width: 8),
+              Text(
+                'Lumina Cyber',
+                style: AppTextStyles.headlineSm.copyWith(
+                  color: const Color(0xFF8E24AA),
+                  fontWeight: FontWeight.w900,
+                  fontSize: 20,
                 ),
-              );
-            },
-            child: Text(item.title, style: AppTextStyles.title64Black900),
-          ),
-          const Spacer(),
-          Center(
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.0, end: 1.0),
-              duration: const Duration(seconds: 2),
-              curve: Curves.easeInOutSine,
-              builder: (context, value, child) {
-                return Transform.translate(
-                  offset: Offset(0, 10 * (1 - (2 * value - 1).abs())),
-                  child: child,
-                );
-              },
-              child: Image.asset(
-                item.imagePath,
-                height: 320,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.notes, size: 100, color: Colors.black26),
               ),
+              const Spacer(),
+              TextButton(
+                onPressed: onSkip,
+                child: Text(
+                  'SKIP',
+                  style: AppTextStyles.labelMd.copyWith(
+                    color: Colors.black45,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const Spacer(flex: 1),
+          
+          // Image - Reduced height to prevent overlap
+          Center(
+            child: Image.asset(
+              item.imagePath,
+              height: size.height * 0.35, // Responsive height
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) =>
+                  const Icon(Icons.notes, size: 100, color: Colors.black26),
             ),
           ),
-          const Spacer(),
+          
+          const Spacer(flex: 1),
+          
+          // Title
+          Text(
+            item.title,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.headlineLg.copyWith(
+              color: const Color(0xFF003440),
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Description
           Padding(
-            padding: const EdgeInsets.only(right: 40),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               item.description,
-              style: AppTextStyles.title18Black500.copyWith(
-                color: Colors.black87,
-                height: 1.5,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodyMd.copyWith(
+                color: Colors.black54,
+                height: 1.4,
+                fontSize: 15,
               ),
             ),
           ),
-          const SizedBox(height: 48),
-          const NextPageButton(),
-          const SizedBox(height: 40),
+          
+          // Bottom spacing to leave room for indicators and buttons in Stack
+          const SizedBox(height: 180),
         ],
       ),
     );

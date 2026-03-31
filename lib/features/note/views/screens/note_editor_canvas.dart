@@ -58,7 +58,15 @@ class _NoteEditorCanvasState extends State<NoteEditorCanvas> {
         final imageUrl = await cubit.uploadImage(File(image.path));
         
         final index = _controller.selection.baseOffset;
-        _controller.replaceSelection(BlockEmbed.image(imageUrl));
+        final length = _controller.selection.extentOffset - index;
+
+        // استخدام replaceText لإدراج الصورة في مكان الكرسر
+        _controller.replaceText(
+          index,
+          length,
+          BlockEmbed.image(imageUrl),
+          TextSelection.collapsed(offset: index + 1)
+        );
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

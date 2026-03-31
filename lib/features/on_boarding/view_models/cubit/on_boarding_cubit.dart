@@ -11,33 +11,25 @@ class OnBoardingCubit extends Cubit<OnBoardingState> {
 
   final List<OnboardingModel> items = [
     OnboardingModel(
-      title: "Write Your\nStory",
+      title: "Organize your notes with style",
       description:
-          "Capture every thought, from brilliant ideas to simple daily moments, in your personal space.",
-
-      bgColor: const Color(0xFFFDE3E0),
+          "Arrange your thoughts in colorful, custom folders for easy access.",
+      bgColor: const Color(0xFFEAF9FF),
       imagePath: "assets/onboarding_1.png",
     ),
     OnboardingModel(
-      title: "Smartly\nOrganized",
+      title: "Professional Writing Experience",
       description:
-          "Keep your work, study, and life separate yet accessible. Beautiful folders for a focused mind.",
-      bgColor: const Color(0xFFFBFDE1),
+          "Capture every detail with our advanced rich text editor.",
+      bgColor: const Color(0xFFEAF9FF),
       imagePath: "assets/onboarding_2.png",
     ),
     OnboardingModel(
-      title: "Find it\nInstantly",
+      title: "Ultimate Security for Your Notes",
       description:
-          "Your second brain remembers everything. Powerful search helps you recall any note in a splash.",
-      bgColor: const Color(0xFFFFE6D3),
+          "Protect your privacy with a custom PIN and end-to-end encryption.",
+      bgColor: const Color(0xFFEAF9FF),
       imagePath: "assets/onboarding_3.png",
-    ),
-    OnboardingModel(
-      title: "Stay\nInspired",
-      description:
-          "Turn your reflections into reality. The perfect tool for thinkers, creators, and dreamers.",
-      bgColor: const Color(0xFFD3DAFF),
-      imagePath: "assets/onboarding_4.png",
     ),
   ];
 
